@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane stylesheets="@main.css" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="azari.amirhossein.dfa_minimization.MainController">
+   <Canvas fx:id="canvas" height="600" width="800" />
+   <Button fx:id="startButton" layoutX="333.0" layoutY="513.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="135.0" styleClass="custom-button" text="Start" />
+</AnchorPane>

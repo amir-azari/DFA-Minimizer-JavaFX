@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.canvas.Canvas?>
+<AnchorPane fx:id="anchorPane" prefHeight="600.0" prefWidth="800.0" stylesheets="@menu.css" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="azari.amirhossein.dfa_minimization.MenuController">
+    <Canvas fx:id="canvas" height="600" width="800" />
+
+    <children>
+        <VBox fx:id="backgroundVBox" alignment="CENTER" layoutX="150.0" layoutY="151.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="200.0" prefWidth="500.0" spacing="10.0" styleClass="background-vbox">
+            <!-- Symbols of language -->
+            <Label fx:id="symbolsLabel" prefHeight="20.0" prefWidth="530.0" text="Enter symbols of language used:" />
+            <TextField fx:id="symbolsField" prefWidth="300.0" promptText="e.g. a b c" />
+
+            <!-- Names of states -->
+            <Label fx:id="statesLabel" prefHeight="20.0" prefWidth="505.0" text="Enter names of states:" />
+            <TextField fx:id="statesField" prefWidth="300.0" promptText="e.g. q0 q1 q2" />
+
+            <Button fx:id="confirmButton" mnemonicParsing="false" prefHeight="40.0" prefWidth="150.0" text="Confirm">
+                <VBox.margin>
+                    <Insets top="40.0" />
+                </VBox.margin>
+            </Button>
+
+        </VBox>
+    </children>
+</AnchorPane>
