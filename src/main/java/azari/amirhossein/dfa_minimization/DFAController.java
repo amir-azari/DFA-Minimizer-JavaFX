@@ -27,6 +27,8 @@ public class DFAController {
 
     private final List<State> statesList = new ArrayList<>();
 
+    private State selectedState = null;
+
     @FXML
     public void initialize() {
 
@@ -36,9 +38,13 @@ public class DFAController {
     public void handleMouseClick(MouseEvent event) {
         double x = event.getX();
         double y = event.getY();
-
         if (event.getButton() == MouseButton.SECONDARY) {
             addState(x, y);
+        }else if (event.getButton() == MouseButton.PRIMARY) {
+            State clickedState = getClickedState(x, y);
+            if (clickedState != null) {
+                handleStateSelection(clickedState, event.isControlDown());
+            }
         }
     }
 
@@ -55,11 +61,65 @@ public class DFAController {
         }
     }
 
+    // Get the clicked state based on mouse coordinates
+    private State getClickedState(double x, double y) {
+        for (State state : statesList) {
+            if (state.isClicked(x, y)) {
+                return state;
+            }
+        }
+        return null;
+    }
+    // Handle state selection logic
+    private void handleStateSelection(State clickedState, boolean ctrlDown) {
 
+        if (clickedState != null && ctrlDown) {
+            clickedState.select();
+            if (selectedState == null) {
+                selectedState = clickedState;
+                selectedState.select();
+            }else {
+                showMultiSymbolSelectionDialog().ifPresent(symbols -> {
+
+
+                });
+                selectedState.deselect();
+                selectedState = null;
+                clickedState.deselect();
+            }
+        }
+    }
     // Receive data from MenuController
     public void setData(char[] symbolsArray, char[] statesArray) {
         this.symbolsArray = symbolsArray;
         this.statesArray = statesArray;
     }
-    
+
+    // Show a dialog for selecting multiple symbols for a transition
+    private Optional<List<String>> showMultiSymbolSelectionDialog() {
+        List<String> selectedSymbols = new ArrayList<>();
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Select Symbols");
+        alert.setHeaderText("Choose symbols for the transition:");
+
+        VBox checkboxContainer = new VBox();
+        for (char symbol : symbolsArray) {
+            CheckBox checkBox = new CheckBox(String.valueOf(symbol));
+            checkboxContainer.getChildren().add(checkBox);
+        }
+
+        alert.getDialogPane().setContent(checkboxContainer);
+        alert.showAndWait().ifPresent(result -> {
+            if (result == ButtonType.OK) {
+                for (Node node : checkboxContainer.getChildren()) {
+                    CheckBox checkBox = (CheckBox) node;
+                    if (checkBox.isSelected()) {
+                        selectedSymbols.add(checkBox.getText());
+                    }
+                }
+            }
+        });
+
+        return selectedSymbols.isEmpty() ? Optional.empty() : Optional.of(selectedSymbols);
+    }
 }

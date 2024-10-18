@@ -87,6 +87,22 @@ public class State {
 
         circle.setUserData(new double[]{sceneX, sceneY});
     }
+    // Check if a point (x, y) is within the state circle (clicked)
+    public boolean isClicked(double clickX, double clickY) {
+        double radius = circle.getRadius();
+        return Math.pow(clickX - x, 2) + Math.pow(clickY - y, 2) <= Math.pow(radius, 2);
+    }
+    // change color for select state
+    public void select() {
+        circle.setStroke(Color.web(Constants.COLOR_SELECTED));
+        circle.setStrokeWidth(2);
+    }
+
+    // change color for deselect state
+    public void deselect() {
+        circle.setStroke(Color.web(Constants.COLOR_SILVER));
+        circle.setStrokeWidth(2);
+    }
     // Draw the state on the pane
     public void draw(Pane pane) {
         pane.getChildren().addAll(circle, text);
