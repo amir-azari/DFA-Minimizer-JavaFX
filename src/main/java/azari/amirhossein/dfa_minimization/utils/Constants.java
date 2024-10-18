@@ -2,7 +2,8 @@ package azari.amirhossein.dfa_minimization.utils;
 
 public class Constants {
     public static final int RADIUS = 20;
-
+    public static final int ARROW_SIZE = 10;
+    public static final int SYMBOL_OFFSET = 15;
 
     // Colors
     public static final String COLOR_BLUE = "#CBE0F6";

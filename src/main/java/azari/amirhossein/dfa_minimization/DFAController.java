@@ -1,6 +1,7 @@
 package azari.amirhossein.dfa_minimization;
 
 import azari.amirhossein.dfa_minimization.utils.State;
+import azari.amirhossein.dfa_minimization.utils.Transition;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
@@ -26,6 +27,7 @@ public class DFAController {
     private int currentStateIndex = 0;
 
     private final List<State> statesList = new ArrayList<>();
+    private final List<Transition> transitionsList = new ArrayList<>();
 
     private State selectedState = null;
 
@@ -80,7 +82,10 @@ public class DFAController {
                 selectedState.select();
             }else {
                 showMultiSymbolSelectionDialog().ifPresent(symbols -> {
-
+                    String combinedSymbols = String.join(",", symbols);
+                    addTransition(selectedState, clickedState, combinedSymbols);
+                    System.out.println(transitionsList.size());
+                    System.out.println(transitionsList);
 
                 });
                 selectedState.deselect();
@@ -88,6 +93,43 @@ public class DFAController {
                 clickedState.deselect();
             }
         }
+    }
+    // Add a transition between two states
+    private void addTransition(State fromState, State toState, String symbols) {
+        Transition existingForward = null;
+        Transition existingReverse = null;
+
+        for (Transition transition : transitionsList) {
+            if (transition.getFromState() == fromState && transition.getToState() == toState) {
+                existingForward = transition;
+            } else if (transition.getFromState() == toState && transition.getToState() == fromState) {
+                existingReverse = transition;
+            }
+        }
+
+        if (existingForward != null) {
+            // Update existing forward transition
+            transitionsList.remove(existingForward);
+            removeTransitionFromPane(existingForward);
+        }
+
+        boolean shouldBeCurved = existingReverse != null;
+        Transition newTransition = new Transition(fromState, toState, symbols, shouldBeCurved);
+        transitionsList.add(newTransition);
+        newTransition.draw(drawingPane);
+
+        if (existingReverse != null) {
+            // Make the reverse transition curved
+            existingReverse.setCurved(true);
+            removeTransitionFromPane(existingReverse);
+            existingReverse.draw(drawingPane);
+        }
+    }
+
+    private void removeTransitionFromPane(Transition transition) {
+        drawingPane.getChildren().remove(transition.getLine());
+        drawingPane.getChildren().remove(transition.getArrow());
+        drawingPane.getChildren().remove(transition.getText());
     }
     // Receive data from MenuController
     public void setData(char[] symbolsArray, char[] statesArray) {
