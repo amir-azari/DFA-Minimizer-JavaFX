@@ -2,6 +2,8 @@ package azari.amirhossein.dfa_minimization.utils;
 
 
 
+import javafx.event.EventHandler;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -55,10 +57,40 @@ public class State {
         text.setX(x - textWidth / 2);
         text.setY(y + textHeight / 4);
     }
+    // Make the state circle and text draggable
+    private void makeDraggable() {
+        EventHandler<MouseEvent> onPressed = event -> {
+            circle.setUserData(new double[]{event.getSceneX(), event.getSceneY()});
+        };
 
+        EventHandler<MouseEvent> onDragged = event -> {
+            handleDrag(event.getSceneX(), event.getSceneY());
+        };
+
+        circle.setOnMousePressed(onPressed);
+        circle.setOnMouseDragged(onDragged);
+        text.setOnMousePressed(onPressed);
+        text.setOnMouseDragged(onDragged);
+    }
+    // Handle dragging of the state and related updates
+    private void handleDrag(double sceneX, double sceneY) {
+
+        double[] startCoords = (double[]) circle.getUserData();
+        double deltaX = sceneX - startCoords[0];
+        double deltaY = sceneY - startCoords[1];
+
+        x += deltaX;
+        y += deltaY;
+        circle.setCenterX(x);
+        circle.setCenterY(y);
+        centerText();
+
+        circle.setUserData(new double[]{sceneX, sceneY});
+    }
     // Draw the state on the pane
     public void draw(Pane pane) {
         pane.getChildren().addAll(circle, text);
+        makeDraggable();
     }
 
     public double getX() {
