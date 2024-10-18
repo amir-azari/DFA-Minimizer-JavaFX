@@ -4,9 +4,13 @@ import azari.amirhossein.dfa_minimization.animation.ButtonAnimation;
 import azari.amirhossein.dfa_minimization.animation.TextFieldAnimation;
 import azari.amirhossein.dfa_minimization.utils.ParticleSystem;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.stage.Stage;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -42,28 +46,37 @@ public class MenuController {
         particleSystem.startAnimation(canvas);
 
         confirmButton.setOnMouseClicked(mouseEvent -> {
-            // Get data
             String symbols = symbolsField.getText();
             String states = statesField.getText();
 
-            // validation input
             if (!symbols.isEmpty() && !states.isEmpty()) {
                 symbolsArray = processInput(symbols);
                 statesArray = processInput(states);
 
-                if (hasDuplicates(symbolsArray) || hasDuplicates(statesArray) ){
+                if (hasDuplicates(symbolsArray) || hasDuplicates(statesArray)) {
                     showAlert("Error", "Fields must not contain duplicate characters.");
+                } else {
+                    // Pass data to DFAController
+                    try {
+                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/azari/amirhossein/dfa_minimization/dfa.fxml"));
+                        Parent root = loader.load();
 
-                }else {
+                        // Get DFAController and pass data
+                        DFAController dfaController = loader.getController();
+                        dfaController.setData(symbolsArray, statesArray);
 
-                    loadSceneFromFXML("/azari/amirhossein/dfa_minimization/dfa.fxml", mouseEvent);
+                        // Set the scene and show
+                        Stage stage = (Stage) confirmButton.getScene().getWindow();
+                        stage.setScene(new Scene(root));
+                        stage.show();
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
-
             } else {
                 showAlert("Error", "Please fill both fields.");
             }
-
-
         });
     }
     //Check duplicate

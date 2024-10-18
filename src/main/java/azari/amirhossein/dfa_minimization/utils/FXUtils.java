@@ -1,5 +1,6 @@
 package azari.amirhossein.dfa_minimization.utils;
 
+import javafx.animation.FadeTransition;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -7,6 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.IOException;
 
@@ -27,6 +29,12 @@ public class FXUtils {
         Stage currentStage = (Stage) ((Node) mouseEvent.getSource()).getScene().getWindow();
         currentStage.setScene(new Scene(page));
         currentStage.show();
+
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(700), page);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+        fadeIn.play();
+
     }
 
     public static void showAlert(String title, String message) {
