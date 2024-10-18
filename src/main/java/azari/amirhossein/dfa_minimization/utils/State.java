@@ -1,7 +1,6 @@
 package azari.amirhossein.dfa_minimization.utils;
 
 
-
 import javafx.event.EventHandler;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
@@ -12,7 +11,15 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextBoundsType;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class State {
+
+    public interface StateChangeListener {
+        void onStateChanged(State state);
+    }
+
     private int id;
     private String label;
     private boolean isFinalState;
@@ -22,6 +29,9 @@ public class State {
 
     private Circle circle;
     private Text text;
+
+    private List<StateChangeListener> listeners = new ArrayList<>();
+
 
     public State(int id, String label, boolean isFinalState, boolean isStartState, double x, double y) {
         this.id = id;
@@ -50,6 +60,7 @@ public class State {
         text.setBoundsType(TextBoundsType.LOGICAL);
         centerText();
     }
+
     // Center text in the state circle
     private void centerText() {
         double textWidth = text.getBoundsInLocal().getWidth();
@@ -57,6 +68,7 @@ public class State {
         text.setX(x - textWidth / 2);
         text.setY(y + textHeight / 4);
     }
+
     // Make the state circle and text draggable
     private void makeDraggable() {
         EventHandler<MouseEvent> onPressed = event -> {
@@ -72,9 +84,9 @@ public class State {
         text.setOnMousePressed(onPressed);
         text.setOnMouseDragged(onDragged);
     }
+
     // Handle dragging of the state and related updates
     private void handleDrag(double sceneX, double sceneY) {
-
         double[] startCoords = (double[]) circle.getUserData();
         double deltaX = sceneX - startCoords[0];
         double deltaY = sceneY - startCoords[1];
@@ -86,12 +98,27 @@ public class State {
         centerText();
 
         circle.setUserData(new double[]{sceneX, sceneY});
+
+        // Notify listeners about the state change
+        notifyListeners();
     }
+
+    public void addStateChangeListener(StateChangeListener listener) {
+        listeners.add(listener);
+    }
+
+    private void notifyListeners() {
+        for (StateChangeListener listener : listeners) {
+            listener.onStateChanged(this);
+        }
+    }
+
     // Check if a point (x, y) is within the state circle (clicked)
     public boolean isClicked(double clickX, double clickY) {
         double radius = circle.getRadius();
         return Math.pow(clickX - x, 2) + Math.pow(clickY - y, 2) <= Math.pow(radius, 2);
     }
+
     // change color for select state
     public void select() {
         circle.setStroke(Color.web(Constants.COLOR_SELECTED));
@@ -103,6 +130,7 @@ public class State {
         circle.setStroke(Color.web(Constants.COLOR_SILVER));
         circle.setStrokeWidth(2);
     }
+
     // Draw the state on the pane
     public void draw(Pane pane) {
         pane.getChildren().addAll(circle, text);
@@ -116,7 +144,6 @@ public class State {
     public double getY() {
         return y;
     }
-
 
 
 }

@@ -10,6 +10,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +19,7 @@ import static azari.amirhossein.dfa_minimization.utils.FXUtils.showAlert;
 
 import javafx.scene.layout.VBox;
 
-public class DFAController {
+public class DFAController implements State.StateChangeListener {
     @FXML
     private Pane drawingPane;
 
@@ -42,7 +43,7 @@ public class DFAController {
         double y = event.getY();
         if (event.getButton() == MouseButton.SECONDARY) {
             addState(x, y);
-        }else if (event.getButton() == MouseButton.PRIMARY) {
+        } else if (event.getButton() == MouseButton.PRIMARY) {
             State clickedState = getClickedState(x, y);
             if (clickedState != null) {
                 handleStateSelection(clickedState, event.isControlDown());
@@ -55,6 +56,7 @@ public class DFAController {
         if (currentStateIndex < statesArray.length) {
             String stateName = String.valueOf(statesArray[currentStateIndex]);
             State newState = new State(currentStateIndex, stateName, false, false, x, y);
+            newState.addStateChangeListener(this);
             statesList.add(newState);
             newState.draw(drawingPane);
             currentStateIndex++;
@@ -72,6 +74,7 @@ public class DFAController {
         }
         return null;
     }
+
     // Handle state selection logic
     private void handleStateSelection(State clickedState, boolean ctrlDown) {
 
@@ -80,7 +83,7 @@ public class DFAController {
             if (selectedState == null) {
                 selectedState = clickedState;
                 selectedState.select();
-            }else {
+            } else {
                 showMultiSymbolSelectionDialog().ifPresent(symbols -> {
                     String combinedSymbols = String.join(",", symbols);
                     addTransition(selectedState, clickedState, combinedSymbols);
@@ -94,6 +97,7 @@ public class DFAController {
             }
         }
     }
+
     // Add a transition between two states
     private void addTransition(State fromState, State toState, String symbols) {
         Transition existingForward = null;
@@ -131,6 +135,7 @@ public class DFAController {
         drawingPane.getChildren().remove(transition.getArrow());
         drawingPane.getChildren().remove(transition.getText());
     }
+
     // Receive data from MenuController
     public void setData(char[] symbolsArray, char[] statesArray) {
         this.symbolsArray = symbolsArray;
@@ -163,5 +168,17 @@ public class DFAController {
         });
 
         return selectedSymbols.isEmpty() ? Optional.empty() : Optional.of(selectedSymbols);
+    }
+
+    @Override
+    public void onStateChanged(State state) {
+        updateTransitions();
+    }
+
+    private void updateTransitions() {
+        for (Transition transition : transitionsList) {
+            transition.updatePosition();
+            transition.redraw(drawingPane);
+        }
     }
 }

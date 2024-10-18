@@ -1,5 +1,6 @@
 package azari.amirhossein.dfa_minimization.utils;
 
+import javafx.geometry.Point2D;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.CubicCurve;
@@ -19,6 +20,8 @@ public class Transition {
     private boolean isCurved;
     private Pane pane;
 
+    private static final double OFFSET_ANGLE = Math.PI / 18;
+
     public Transition(State fromState, State toState, String symbol, boolean isCurved) {
         this.fromState = fromState;
         this.toState = toState;
@@ -27,6 +30,7 @@ public class Transition {
 
         createLine();
     }
+
     // Create line or curve line
     private void createLine() {
         double startX = fromState.getX();
@@ -37,36 +41,50 @@ public class Transition {
         double radius = Constants.RADIUS;
         double angle = Math.atan2(endY - startY, endX - startX);
 
-        double lineStartX = startX + radius * Math.cos(angle);
-        double lineStartY = startY + radius * Math.sin(angle);
-        double lineEndX = endX - radius * Math.cos(angle);
-        double lineEndY = endY - radius * Math.sin(angle);
-
         if (isCurved) {
-            double midX = (lineStartX + lineEndX) / 2;
-            double midY = (lineStartY + lineEndY) / 2;
+            // Calculate offset angles for start and end
+            double startAngle = angle + OFFSET_ANGLE;
+            double endAngle = angle - OFFSET_ANGLE;
 
-            double controlOffsetX = (startY - endY) * 0.2;
-            double controlOffsetY = (endX - startX) * 0.2;
+            Point2D startPoint = calculateLineEndPoint(startX, startY, radius, startAngle);
+            Point2D endPoint = calculateLineEndPoint(endX, endY, -radius, endAngle);
+
+
+            double midX = (startPoint.getX() + endPoint.getX()) / 2;
+            double midY = (startPoint.getY() + endPoint.getY()) / 2;
+
+            double controlOffsetX = (startY - endY) * Constants.CURVE_CONTROL_OFFSET;
+            double controlOffsetY = (endX - startX) * Constants.CURVE_CONTROL_OFFSET;
 
             CubicCurve curve = new CubicCurve(
-                    lineStartX, lineStartY,
+                    startPoint.getX(), startPoint.getY(),
                     midX + controlOffsetX, midY + controlOffsetY,
                     midX + controlOffsetX, midY + controlOffsetY,
-                    lineEndX, lineEndY
+                    endPoint.getX(), endPoint.getY()
             );
 
             curve.setFill(null);
-            curve.setStroke(Color.web(Constants.COLOR_BLACK));
+            curve.setStroke(Color.web(Constants.COLOR_LINE));
             curve.setStrokeWidth(2);
             line = curve;
         } else {
-            Line straightLine = new Line(lineStartX, lineStartY, lineEndX, lineEndY);
-            straightLine.setStroke(Color.web(Constants.COLOR_BLACK));
+            Point2D startPoint = calculateLineEndPoint(startX, startY, radius, angle);
+            Point2D endPoint = calculateLineEndPoint(endX, endY, -radius, angle);
+
+            Line straightLine = new Line(startPoint.getX(), startPoint.getY(), endPoint.getX(), endPoint.getY());
+            straightLine.setStroke(Color.web(Constants.COLOR_LINE));
             straightLine.setStrokeWidth(2);
             line = straightLine;
         }
     }
+
+    // Calculate the coordinates of the start and end points
+    private Point2D calculateLineEndPoint(double x, double y, double radius, double angle) {
+        double lineX = x + radius * Math.cos(angle);
+        double lineY = y + radius * Math.sin(angle);
+        return new Point2D(lineX, lineY);
+    }
+
     // Draw an arrow at the end of the line
     private void drawArrow(Pane pane) {
         double endX, endY, angle;
@@ -95,7 +113,7 @@ public class Transition {
 
         arrow = new Polygon();
         arrow.getPoints().addAll(endX, endY, arrowX1, arrowY1, arrowX2, arrowY2);
-        arrow.setFill(Color.web(Constants.COLOR_BLACK));
+        arrow.setFill(Color.web(Constants.COLOR_ARROW));
 
         pane.getChildren().add(arrow);
     }
@@ -117,6 +135,7 @@ public class Transition {
         text.setY(y + text.getBoundsInLocal().getHeight() / 4);
         pane.getChildren().add(text);
     }
+
     //calculate coordinates for curve line and straight line
     private double[] calculateCoordinates() {
         double x, y, nx, ny;
@@ -160,6 +179,22 @@ public class Transition {
 
     // add views to pane
     public void draw(Pane pane) {
+        this.pane = pane;
+        pane.getChildren().add(line);
+        drawArrow(pane);
+        drawSymbol(pane);
+    }
+
+    public void updatePosition() {
+        if (pane != null) {
+            pane.getChildren().remove(line);
+            pane.getChildren().remove(arrow);
+            pane.getChildren().remove(text);
+        }
+        createLine();
+    }
+
+    public void redraw(Pane pane) {
         this.pane = pane;
         pane.getChildren().add(line);
         drawArrow(pane);
