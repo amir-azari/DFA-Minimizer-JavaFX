@@ -3,6 +3,7 @@ package azari.amirhossein.dfa_minimization;
 import azari.amirhossein.dfa_minimization.animation.ButtonAnimation;
 import azari.amirhossein.dfa_minimization.animation.TextFieldAnimation;
 import azari.amirhossein.dfa_minimization.utils.ParticleSystem;
+import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -11,6 +12,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -70,6 +72,10 @@ public class MenuController {
                         stage.setScene(new Scene(root));
                         stage.show();
 
+                        FadeTransition fadeIn = new FadeTransition(Duration.millis(700), root);
+                        fadeIn.setFromValue(0);
+                        fadeIn.setToValue(1);
+                        fadeIn.play();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

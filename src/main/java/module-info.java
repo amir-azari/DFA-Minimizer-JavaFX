@@ -14,4 +14,6 @@ module azari.amirhossein.dfa_minimization {
     exports azari.amirhossein.dfa_minimization;
     exports azari.amirhossein.dfa_minimization.utils;
     opens azari.amirhossein.dfa_minimization.utils to javafx.fxml;
+    exports azari.amirhossein.dfa_minimization.models;
+    opens azari.amirhossein.dfa_minimization.models to javafx.fxml;
 }

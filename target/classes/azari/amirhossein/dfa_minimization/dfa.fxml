@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Rectangle?>
 
-
+<?import javafx.scene.canvas.Canvas?>
 <AnchorPane fx:id="drawingPane" onMouseClicked="#handleMouseClick" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="azari.amirhossein.dfa_minimization.DFAController">
-
+    <Canvas fx:id="canvas" height="600" width="800" />
+    <Rectangle width="800" height="600" fill="rgba(255, 255, 255, 0.4)" />
 </AnchorPane>

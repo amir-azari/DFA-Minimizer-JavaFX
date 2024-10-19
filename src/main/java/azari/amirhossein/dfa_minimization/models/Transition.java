@@ -1,5 +1,6 @@
-package azari.amirhossein.dfa_minimization.utils;
+package azari.amirhossein.dfa_minimization.models;
 
+import azari.amirhossein.dfa_minimization.utils.Constants;
 import javafx.geometry.Point2D;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -20,7 +21,7 @@ public class Transition {
     private boolean isCurved;
     private Pane pane;
 
-    private static final double OFFSET_ANGLE = Math.PI / 18;
+    private static final double OFFSET_ANGLE = Math.PI / 12;
 
     public Transition(State fromState, State toState, String symbol, boolean isCurved) {
         this.fromState = fromState;
@@ -64,16 +65,16 @@ public class Transition {
             );
 
             curve.setFill(null);
-            curve.setStroke(Color.web(Constants.COLOR_LINE));
-            curve.setStrokeWidth(2);
+            curve.setStroke(Color.web(Constants.COLOR_TRANSITION));
+            curve.setStrokeWidth(Constants.LINE_SIZE);
             line = curve;
         } else {
             Point2D startPoint = calculateLineEndPoint(startX, startY, radius, angle);
             Point2D endPoint = calculateLineEndPoint(endX, endY, -radius, angle);
 
             Line straightLine = new Line(startPoint.getX(), startPoint.getY(), endPoint.getX(), endPoint.getY());
-            straightLine.setStroke(Color.web(Constants.COLOR_LINE));
-            straightLine.setStrokeWidth(2);
+            straightLine.setStroke(Color.web(Constants.COLOR_TRANSITION));
+            straightLine.setStrokeWidth(Constants.LINE_SIZE);
             line = straightLine;
         }
     }
@@ -113,7 +114,7 @@ public class Transition {
 
         arrow = new Polygon();
         arrow.getPoints().addAll(endX, endY, arrowX1, arrowY1, arrowX2, arrowY2);
-        arrow.setFill(Color.web(Constants.COLOR_ARROW));
+        arrow.setFill(Color.web(Constants.COLOR_TRANSITION));
 
         pane.getChildren().add(arrow);
     }

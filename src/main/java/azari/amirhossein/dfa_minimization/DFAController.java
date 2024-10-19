@@ -1,12 +1,16 @@
 package azari.amirhossein.dfa_minimization;
 
-import azari.amirhossein.dfa_minimization.utils.State;
-import azari.amirhossein.dfa_minimization.utils.Transition;
+import azari.amirhossein.dfa_minimization.utils.ParticleSystem;
+import azari.amirhossein.dfa_minimization.models.State;
+import azari.amirhossein.dfa_minimization.utils.StateChangeListener;
+import azari.amirhossein.dfa_minimization.models.Transition;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.DialogPane;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
@@ -19,9 +23,11 @@ import static azari.amirhossein.dfa_minimization.utils.FXUtils.showAlert;
 
 import javafx.scene.layout.VBox;
 
-public class DFAController implements State.StateChangeListener {
+public class DFAController implements StateChangeListener {
     @FXML
     private Pane drawingPane;
+    @FXML
+    private Canvas canvas;
 
     private char[] symbolsArray;
     private char[] statesArray;
@@ -34,7 +40,8 @@ public class DFAController implements State.StateChangeListener {
 
     @FXML
     public void initialize() {
-
+        ParticleSystem particleSystem = new ParticleSystem(800, 600, 80);
+        particleSystem.startAnimation(canvas);
     }
 
     @FXML
@@ -47,6 +54,12 @@ public class DFAController implements State.StateChangeListener {
             State clickedState = getClickedState(x, y);
             if (clickedState != null) {
                 handleStateSelection(clickedState, event.isControlDown());
+            }
+        }
+        if (event.getClickCount() == 2 && event.getButton() == MouseButton.PRIMARY) {  // Double-click to change state type
+            State clickedState = getClickedState(x, y);
+            if (clickedState != null) {
+                showStateTypeDialog(clickedState);
             }
         }
     }
@@ -169,7 +182,48 @@ public class DFAController implements State.StateChangeListener {
 
         return selectedSymbols.isEmpty() ? Optional.empty() : Optional.of(selectedSymbols);
     }
+    // Show a dialog to change the state type (start, final, reset)
+    private void showStateTypeDialog(State clickedState) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Set State Type");
+        alert.setHeaderText("Choose the type of state:");
 
+        ButtonType startButton = new ButtonType("Start State");
+        ButtonType finalButton = new ButtonType("Final State");
+        ButtonType resetButton = new ButtonType("Reset");
+        alert.getButtonTypes().setAll(resetButton, startButton, finalButton, ButtonType.CANCEL);
+
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.getStylesheets().add(getClass().getResource("alertStyle.css").toExternalForm());
+        dialogPane.lookupButton(finalButton).getStyleClass().add("cancel-button");
+        dialogPane.lookupButton(resetButton).getStyleClass().add("reset-button");
+        dialogPane.lookupButton(startButton).getStyleClass().add("other-button");
+        dialogPane.lookupButton(finalButton).getStyleClass().add("other-button");
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent()) {
+            if (result.get() == startButton) {
+                setStartState(clickedState);
+            } else if (result.get() == finalButton) {
+                clickedState.setFinalState(true);
+            } else if (result.get() == resetButton) {
+                clickedState.setStartState(false);
+                clickedState.setFinalState(false);
+            }
+            clickedState.updateAppearance(drawingPane);
+        }
+    }
+    // Set a state as the start state and update appearances
+    private void setStartState(State newStartState) {
+        for (State state : statesList) {
+            if (state.isStartState()) {
+                state.setStartState(false);
+                state.updateAppearance(drawingPane);
+                break;
+            }
+        }
+        newStartState.setStartState(true);
+        newStartState.updateAppearance(drawingPane);
+    }
     @Override
     public void onStateChanged(State state) {
         updateTransitions();
