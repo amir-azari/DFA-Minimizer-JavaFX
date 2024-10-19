@@ -14,6 +14,7 @@ public class Transition {
     private State fromState;
     private State toState;
     private String symbol;
+    private boolean isSelfLoop;
 
     private Shape line;
     private Polygon arrow;
@@ -28,6 +29,7 @@ public class Transition {
         this.toState = toState;
         this.symbol = symbol;
         this.isCurved = isCurved;
+        this.isSelfLoop = fromState == toState;
 
         createLine();
     }
@@ -42,7 +44,21 @@ public class Transition {
         double radius = Constants.RADIUS;
         double angle = Math.atan2(endY - startY, endX - startX);
 
-        if (isCurved) {
+        if (isSelfLoop){
+            startX = fromState.getX() - (Constants.RADIUS/2);
+            startY = fromState.getY() - Constants.RADIUS;
+            endX = startX + Constants.RADIUS;
+            endY = startY;
+            double controlX1 = startX - 25;
+            double controlY1 = startY - 25 ;
+            double controlX2 = endX + 25;
+            double controlY2 = endY - 25;
+
+            line = new CubicCurve(startX, startY, controlX1, controlY1, controlX2, controlY2, endX, endY);
+            line.setFill(null);
+            line.setStroke(Color.web(Constants.COLOR_TRANSITION));
+            line.setStrokeWidth(2);
+        }else if (isCurved) {
             // Calculate offset angles for start and end
             double startAngle = angle + OFFSET_ANGLE;
             double endAngle = angle - OFFSET_ANGLE;
@@ -121,22 +137,37 @@ public class Transition {
 
     // Draw the symbol in the middle of the line
     private void drawSymbol(Pane pane) {
-        double[] coordinates = calculateCoordinates();
-        double x = coordinates[0];
-        double y = coordinates[1];
-        double nx = coordinates[2];
-        double ny = coordinates[3];
+        if (isSelfLoop) {
+            drawSelfLoopSymbol(pane);
+        }else {
+            double[] coordinates = calculateCoordinates();
+            double x = coordinates[0];
+            double y = coordinates[1];
+            double nx = coordinates[2];
+            double ny = coordinates[3];
 
-        double offset = Constants.SYMBOL_OFFSET;
-        x += nx * offset;
-        y += ny * offset;
+            double offset = Constants.SYMBOL_OFFSET;
+            x += nx * offset;
+            y += ny * offset;
+
+            text = new Text(symbol);
+            text.setX(x - text.getBoundsInLocal().getWidth() / 2);
+            text.setY(y + text.getBoundsInLocal().getHeight() / 4);
+            pane.getChildren().add(text);
+        }
+    }
+    private void drawSelfLoopSymbol(Pane pane) {
+        CubicCurve curve = (CubicCurve) line;
+        double t = 0.5;
+
+        double x = calculateBezierCoordinate(curve.getStartX(), curve.getControlX1(), curve.getControlX2(), curve.getEndX(), t);
+        double y = calculateBezierCoordinate(curve.getStartY(), curve.getControlY1(), curve.getControlY2(), curve.getEndY(), t);
 
         text = new Text(symbol);
         text.setX(x - text.getBoundsInLocal().getWidth() / 2);
-        text.setY(y + text.getBoundsInLocal().getHeight() / 4);
+        text.setY(y - text.getBoundsInLocal().getHeight() / 2);
         pane.getChildren().add(text);
     }
-
     //calculate coordinates for curve line and straight line
     private double[] calculateCoordinates() {
         double x, y, nx, ny;

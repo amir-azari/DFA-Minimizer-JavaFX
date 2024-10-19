@@ -14,9 +14,9 @@ import javafx.scene.control.DialogPane;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static azari.amirhossein.dfa_minimization.utils.FXUtils.showAlert;
@@ -56,7 +56,7 @@ public class DFAController implements StateChangeListener {
                 handleStateSelection(clickedState, event.isControlDown());
             }
         }
-        if (event.getClickCount() == 2 && event.getButton() == MouseButton.PRIMARY) {  // Double-click to change state type
+        if (event.getClickCount() == 2 && event.getButton() == MouseButton.PRIMARY && !event.isControlDown()) {  // Double-click to change state type
             State clickedState = getClickedState(x, y);
             if (clickedState != null) {
                 showStateTypeDialog(clickedState);
@@ -100,13 +100,17 @@ public class DFAController implements StateChangeListener {
                 showMultiSymbolSelectionDialog().ifPresent(symbols -> {
                     String combinedSymbols = String.join(",", symbols);
                     addTransition(selectedState, clickedState, combinedSymbols);
-                    System.out.println(transitionsList.size());
-                    System.out.println(transitionsList);
 
                 });
                 selectedState.deselect();
+                if (selectedState.isFinalState()){
+                    selectedState.updateAppearance(drawingPane);
+                }
                 selectedState = null;
                 clickedState.deselect();
+                if (clickedState.isFinalState()){
+                    clickedState.updateAppearance(drawingPane);
+                }
             }
         }
     }
@@ -194,7 +198,7 @@ public class DFAController implements StateChangeListener {
         alert.getButtonTypes().setAll(resetButton, startButton, finalButton, ButtonType.CANCEL);
 
         DialogPane dialogPane = alert.getDialogPane();
-        dialogPane.getStylesheets().add(getClass().getResource("alertStyle.css").toExternalForm());
+        dialogPane.getStylesheets().add(Objects.requireNonNull(getClass().getResource("alertStyle.css")).toExternalForm());
         dialogPane.lookupButton(finalButton).getStyleClass().add("cancel-button");
         dialogPane.lookupButton(resetButton).getStyleClass().add("reset-button");
         dialogPane.lookupButton(startButton).getStyleClass().add("other-button");

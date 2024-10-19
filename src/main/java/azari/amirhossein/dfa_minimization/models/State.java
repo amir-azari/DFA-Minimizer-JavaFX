@@ -215,4 +215,8 @@ public class State {
     public void setStartState(boolean startState) {
         isStartState = startState;
     }
+
+    public boolean isFinalState() {
+        return isFinalState;
+    }
 }

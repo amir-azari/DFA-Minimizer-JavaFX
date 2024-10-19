@@ -13,7 +13,7 @@ public class Constants {
     public static final String COLOR_SILVER = "#C8CBD0";
     public static final String COLOR_BLACK= "#353535";
     public static final String COLOR_TRANSITION = "#495057";
-    public static final String COLOR_SELECTED = "#264653";
+    public static final String COLOR_SELECTED = "#b73737";
 
     // Arrow coordinates
     public static final double START_ARROW_OFFSET_X = 40.0;
