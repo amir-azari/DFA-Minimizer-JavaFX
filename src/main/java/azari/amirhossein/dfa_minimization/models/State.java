@@ -4,6 +4,8 @@ package azari.amirhossein.dfa_minimization.models;
 import azari.amirhossein.dfa_minimization.utils.Constants;
 import azari.amirhossein.dfa_minimization.utils.StateChangeListener;
 import javafx.event.EventHandler;
+import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -47,6 +49,9 @@ public class State {
 
         createCircle();
         createText();
+
+
+
     }
 
     // Create state circle
@@ -195,6 +200,19 @@ public class State {
     public void draw(Pane pane) {
         pane.getChildren().addAll(circle, text);
         makeDraggable();
+
+        setDraggableCursor(circle, pane);
+        setDraggableCursor(text, pane);
+    }
+    // Change cursor
+    private void setDraggableCursor(Node node, Pane pane) {
+        node.setOnMouseEntered(event -> {
+            pane.setCursor(Cursor.MOVE);
+        });
+
+        node.setOnMouseExited(event -> {
+            pane.setCursor(Cursor.DEFAULT);
+        });
     }
 
     public double getX() {

@@ -32,6 +32,7 @@ public class Transition {
         this.isSelfLoop = fromState == toState;
 
         createLine();
+
     }
 
     // Create line or curve line
