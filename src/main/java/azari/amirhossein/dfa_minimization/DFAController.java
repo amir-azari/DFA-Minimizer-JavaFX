@@ -1,12 +1,17 @@
 package azari.amirhossein.dfa_minimization;
 
 import azari.amirhossein.dfa_minimization.animation.ButtonAnimation;
+import azari.amirhossein.dfa_minimization.utils.FXUtils;
 import azari.amirhossein.dfa_minimization.utils.ParticleSystem;
 import azari.amirhossein.dfa_minimization.models.State;
 import azari.amirhossein.dfa_minimization.utils.StateChangeListener;
 import azari.amirhossein.dfa_minimization.models.Transition;
+import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
@@ -18,6 +23,8 @@ import java.util.*;
 import static azari.amirhossein.dfa_minimization.utils.FXUtils.showAlert;
 
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class DFAController implements StateChangeListener {
     @FXML
@@ -26,12 +33,53 @@ public class DFAController implements StateChangeListener {
     private Canvas canvas;
 
     @FXML
-    private void handleUndo(){}
+    private void handleUndo() {
+        if (!undoStack.isEmpty()) {
+            Transition lastTransition = undoStack.pop();
+            transitionsList.remove(lastTransition);
+            removeTransitionOfGraph(lastTransition.getFromState().getLabel(), lastTransition.getSymbol());
+            removeTransitionFromPane(lastTransition);
+            redoStack.push(lastTransition);
+
+        }
+    }
     @FXML
-    private void handleRedo() {}
+    private void handleRedo() {
+        if (!redoStack.isEmpty()) {
+            Transition lastUndone = redoStack.pop();
+            transitionsList.add(lastUndone);
+            lastUndone.draw(drawingPane);
+
+            addTransitionToGraph(
+                    lastUndone.getFromState().getLabel(),
+                    lastUndone.getSymbol(),
+                    lastUndone.getToState().getLabel()
+            );
+
+            undoStack.push(lastUndone);
+        }
+    }
+
+
 
     @FXML
-    private void handleBack() {}
+    public void handleBack() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/azari/amirhossein/dfa_minimization/menu.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = (Stage) drawingPane.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(700), root);
+            fadeIn.setFromValue(0);
+            fadeIn.setToValue(1);
+            fadeIn.play();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     private String[] symbolsArray;
     private String[] statesArray;
@@ -44,6 +92,8 @@ public class DFAController implements StateChangeListener {
     private final List<Transition> transitionsList = new ArrayList<>();
 
     private State selectedState = null;
+    private final Stack<Transition> undoStack = new Stack<>();
+    private final Stack<Transition> redoStack = new Stack<>();
 
     @FXML
     public void initialize() {
@@ -141,10 +191,10 @@ public class DFAController implements StateChangeListener {
         }
 
         if (existingForward != null) {
-            // Update existing forward transition
             removeTransitionOfGraph(fromState.getLabel(), existingForward.getSymbol());
             transitionsList.remove(existingForward);
             removeTransitionFromPane(existingForward);
+            undoStack.push(existingForward);
         }
 
         boolean shouldBeCurved = existingReverse != null;
@@ -152,18 +202,21 @@ public class DFAController implements StateChangeListener {
         transitionsList.add(newTransition);
         newTransition.draw(drawingPane);
 
+        undoStack.push(newTransition);
+        redoStack.clear();
+
         // Split symbols and add each transition individually
         for (String symbol : symbols.split(",")) {
             graph.get(fromState.getLabel()).put(symbol, toState.getLabel());
         }
 
         if (existingReverse != null) {
-            // Make the reverse transition curved
             removeTransitionOfGraph(fromState.getLabel(), existingReverse.getSymbol());
             existingReverse.setCurved(true);
             removeTransitionFromPane(existingReverse);
             existingReverse.draw(drawingPane);
         }
+
     }
     private void removeTransitionFromPane(Transition transition) {
         drawingPane.getChildren().remove(transition.getLine());
@@ -283,4 +336,13 @@ public class DFAController implements StateChangeListener {
             }
         }
     }
+    public void addTransitionToGraph(String fromState, String symbols, String toState) {
+        for (String symbol : symbols.split(",")) {
+            if (!graph.containsKey(fromState)) {
+                graph.put(fromState, new HashMap<>());
+            }
+            graph.get(fromState).put(symbol, toState);
+        }
+    }
+
 }
