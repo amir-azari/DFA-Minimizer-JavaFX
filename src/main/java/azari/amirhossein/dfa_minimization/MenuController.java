@@ -31,8 +31,8 @@ public class MenuController {
     private TextField statesField;
 
     //Other
-    private char[] symbolsArray;
-    private char[] statesArray;
+    private String[] symbolsArray;
+    private String[] statesArray;
 
     @FXML
     public void initialize() {
@@ -86,9 +86,9 @@ public class MenuController {
         });
     }
     //Check duplicate
-    public static boolean hasDuplicates(char[] symbolsArray) {
-        Set<Character> seenSymbols = new HashSet<>();
-        for (char symbol : symbolsArray) {
+    public static boolean hasDuplicates(String[] symbolsArray) {
+        Set<String> seenSymbols = new HashSet<>();
+        for (String symbol : symbolsArray) {
             if (!seenSymbols.add(symbol)) {
                 return true;
             }
@@ -96,15 +96,9 @@ public class MenuController {
         return false;
     }
 
-    private char[] processInput(String input) {
-        String[] parts = input.trim().split(" ");
-        StringBuilder charBuilder = new StringBuilder();
-        for (String part : parts) {
-            if (!part.isEmpty()) {
-                charBuilder.append(part.trim().charAt(0));
-            }
-        }
-        return charBuilder.toString().toCharArray();
+    private String[] processInput(String input) {
+        return input.trim().split(" ");
     }
+
 
 }

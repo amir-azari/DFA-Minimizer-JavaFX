@@ -5,20 +5,14 @@ import azari.amirhossein.dfa_minimization.models.State;
 import azari.amirhossein.dfa_minimization.utils.StateChangeListener;
 import azari.amirhossein.dfa_minimization.models.Transition;
 import javafx.fxml.FXML;
-import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.DialogPane;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+
+import java.util.*;
 
 import static azari.amirhossein.dfa_minimization.utils.FXUtils.showAlert;
 
@@ -30,9 +24,12 @@ public class DFAController implements StateChangeListener {
     @FXML
     private Canvas canvas;
 
-    private char[] symbolsArray;
-    private char[] statesArray;
+    private String[] symbolsArray;
+    private String[] statesArray;
     private int currentStateIndex = 0;
+    private String startState;
+    private Set<String> finalStates = new HashSet<String>();
+    private HashMap<String, HashMap<String, String>> graph = new HashMap<>();
 
     private final List<State> statesList = new ArrayList<>();
     private final List<Transition> transitionsList = new ArrayList<>();
@@ -76,6 +73,9 @@ public class DFAController implements StateChangeListener {
             statesList.add(newState);
             newState.draw(drawingPane);
             currentStateIndex++;
+
+            graph.put(stateName, new HashMap<>());
+
         } else {
             showAlert("No more states", "All states have been added.");
         }
@@ -133,6 +133,7 @@ public class DFAController implements StateChangeListener {
 
         if (existingForward != null) {
             // Update existing forward transition
+            removeTransitionOfGraph(fromState.getLabel(), existingForward.getSymbol());
             transitionsList.remove(existingForward);
             removeTransitionFromPane(existingForward);
         }
@@ -142,14 +143,19 @@ public class DFAController implements StateChangeListener {
         transitionsList.add(newTransition);
         newTransition.draw(drawingPane);
 
+        // Split symbols and add each transition individually
+        for (String symbol : symbols.split(",")) {
+            graph.get(fromState.getLabel()).put(symbol, toState.getLabel());
+        }
+
         if (existingReverse != null) {
             // Make the reverse transition curved
+            removeTransitionOfGraph(fromState.getLabel(), existingReverse.getSymbol());
             existingReverse.setCurved(true);
             removeTransitionFromPane(existingReverse);
             existingReverse.draw(drawingPane);
         }
     }
-
     private void removeTransitionFromPane(Transition transition) {
         drawingPane.getChildren().remove(transition.getLine());
         drawingPane.getChildren().remove(transition.getArrow());
@@ -157,7 +163,7 @@ public class DFAController implements StateChangeListener {
     }
 
     // Receive data from MenuController
-    public void setData(char[] symbolsArray, char[] statesArray) {
+    public void setData(String[] symbolsArray, String[] statesArray) {
         this.symbolsArray = symbolsArray;
         this.statesArray = statesArray;
     }
@@ -170,7 +176,7 @@ public class DFAController implements StateChangeListener {
         alert.setHeaderText("Choose symbols for the transition:");
 
         VBox checkboxContainer = new VBox();
-        for (char symbol : symbolsArray) {
+        for (String symbol : symbolsArray) {
             CheckBox checkBox = new CheckBox(String.valueOf(symbol));
             checkboxContainer.getChildren().add(checkBox);
         }
@@ -212,7 +218,12 @@ public class DFAController implements StateChangeListener {
                 setStartState(clickedState);
             } else if (result.get() == finalButton) {
                 clickedState.setFinalState(true);
+                finalStates.add(clickedState.getLabel());
             } else if (result.get() == resetButton) {
+                if (startState != null && startState.equals(clickedState.getLabel())) {
+                    startState = null;
+                }
+                finalStates.remove(clickedState.getLabel());
                 clickedState.setStartState(false);
                 clickedState.setFinalState(false);
             }
@@ -229,6 +240,7 @@ public class DFAController implements StateChangeListener {
             }
         }
         newStartState.setStartState(true);
+        startState = newStartState.getLabel();
         newStartState.updateAppearance(drawingPane);
     }
     @Override
@@ -249,6 +261,17 @@ public class DFAController implements StateChangeListener {
         for (Transition transition : transitionsList) {
             transition.updatePosition();
             transition.redraw(drawingPane);
+        }
+    }
+    public void removeTransitionOfGraph(String outerKey, String innerKey) {
+
+        for (String symbol : innerKey.split(",")) {
+            HashMap<String, String> innerMap = graph.get(outerKey);
+
+            if (innerMap != null) {
+                innerMap.remove(symbol);
+
+            }
         }
     }
 }

@@ -22,8 +22,8 @@ import java.util.List;
 
 public class State {
 
-    private int id;
-    private String label;
+    private final int id;
+    private final String label;
     private boolean isFinalState;
     private boolean isStartState;
     private double x;
@@ -36,7 +36,7 @@ public class State {
     private Line startArrow;
     private Polygon arrowHead;
 
-    private List<StateChangeListener> listeners = new ArrayList<>();
+    private final List<StateChangeListener> listeners = new ArrayList<>();
 
 
     public State(int id, String label, boolean isFinalState, boolean isStartState, double x, double y) {
@@ -235,5 +235,9 @@ public class State {
 
     public boolean isFinalState() {
         return isFinalState;
+    }
+
+    public String getLabel() {
+        return label;
     }
 }

@@ -14,10 +14,10 @@ import javafx.scene.shape.Shape;
 import javafx.scene.text.Text;
 
 public class Transition {
-    private State fromState;
-    private State toState;
-    private String symbol;
-    private boolean isSelfLoop;
+    private final State fromState;
+    private final State toState;
+    private final String symbol;
+    private final boolean isSelfLoop;
 
     private Shape line;
     private Polygon arrow;
@@ -374,5 +374,9 @@ public class Transition {
 
     public Text getText() {
         return text;
+    }
+
+    public String getSymbol() {
+        return symbol;
     }
 }
