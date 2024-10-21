@@ -14,6 +14,7 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -97,7 +98,11 @@ public class MenuController {
     }
 
     private String[] processInput(String input) {
-        return input.trim().split(" ");
+
+        String[] parts = input.trim().split(" ");
+        return Arrays.stream(parts)
+                .filter(part -> part != null && !part.isEmpty())
+                .toArray(String[]::new);
     }
 
 

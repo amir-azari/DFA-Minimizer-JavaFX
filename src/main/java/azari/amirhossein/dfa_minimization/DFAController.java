@@ -1,7 +1,5 @@
 package azari.amirhossein.dfa_minimization;
 
-import azari.amirhossein.dfa_minimization.animation.ButtonAnimation;
-import azari.amirhossein.dfa_minimization.utils.FXUtils;
 import azari.amirhossein.dfa_minimization.utils.ParticleSystem;
 import azari.amirhossein.dfa_minimization.models.State;
 import azari.amirhossein.dfa_minimization.utils.StateChangeListener;
