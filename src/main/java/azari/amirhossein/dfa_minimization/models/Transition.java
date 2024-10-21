@@ -1,7 +1,10 @@
 package azari.amirhossein.dfa_minimization.models;
 
 import azari.amirhossein.dfa_minimization.utils.Constants;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.CubicCurve;
@@ -23,6 +26,9 @@ public class Transition {
     private Pane pane;
 
     private static final double OFFSET_ANGLE = Math.PI / 12;
+    private int selfLoopPosition = 0; // 0: top, 1: right, 2: bottom, 3: left
+    private static final double CLICK_THRESHOLD = 10;
+    private CubicCurve curve ;
 
     public Transition(State fromState, State toState, String symbol, boolean isCurved) {
         this.fromState = fromState;
@@ -32,7 +38,6 @@ public class Transition {
         this.isSelfLoop = fromState == toState;
 
         createLine();
-
     }
 
     // Create line or curve line
@@ -46,19 +51,59 @@ public class Transition {
         double angle = Math.atan2(endY - startY, endX - startX);
 
         if (isSelfLoop){
-            startX = fromState.getX() - (Constants.RADIUS/2);
-            startY = fromState.getY() - Constants.RADIUS;
-            endX = startX + Constants.RADIUS;
-            endY = startY;
-            double controlX1 = startX - 25;
-            double controlY1 = startY - 25 ;
-            double controlX2 = endX + 25;
-            double controlY2 = endY - 25;
+            if (isSelfLoop) {
+                double controlX1, controlY1, controlX2, controlY2;
 
-            line = new CubicCurve(startX, startY, controlX1, controlY1, controlX2, controlY2, endX, endY);
-            line.setFill(null);
-            line.setStroke(Color.web(Constants.COLOR_TRANSITION));
-            line.setStrokeWidth(2);
+                switch (selfLoopPosition) {
+                    case 0: // Top
+                        startX = fromState.getX() - (Constants.RADIUS / 2);
+                        startY = fromState.getY() - Constants.RADIUS;
+                        endX = startX + Constants.RADIUS;
+                        endY = startY;
+                        controlX1 = startX - 25;
+                        controlY1 = startY - 25;
+                        controlX2 = endX + 25;
+                        controlY2 = endY - 25;
+                        break;
+                    case 1: // Right
+                        startX = fromState.getX() + Constants.RADIUS;
+                        startY = fromState.getY() - (Constants.RADIUS / 2);
+                        endX = startX;
+                        endY = startY + Constants.RADIUS;
+                        controlX1 = startX + 25;
+                        controlY1 = startY - 25;
+                        controlX2 = endX + 25;
+                        controlY2 = endY + 25;
+                        break;
+                    case 2: // Bottom
+                        startX = fromState.getX() + (Constants.RADIUS / 2);
+                        startY = fromState.getY() + Constants.RADIUS;
+                        endX = startX - Constants.RADIUS;
+                        endY = startY;
+                        controlX1 = startX + 25;
+                        controlY1 = startY + 25;
+                        controlX2 = endX - 25;
+                        controlY2 = endY + 25;
+                        break;
+                    case 3: // Left
+                        startX = fromState.getX() - Constants.RADIUS;
+                        startY = fromState.getY() + (Constants.RADIUS / 2);
+                        endX = startX;
+                        endY = startY - Constants.RADIUS;
+                        controlX1 = startX - 25;
+                        controlY1 = startY + 25;
+                        controlX2 = endX - 25;
+                        controlY2 = endY - 25;
+                        break;
+                    default:
+                        throw new IllegalStateException("Unexpected value: " + selfLoopPosition);
+                }
+                line = new CubicCurve(startX, startY, controlX1, controlY1, controlX2, controlY2, endX, endY);
+                line.setFill(null);
+                line.setStroke(Color.web(Constants.COLOR_TRANSITION));
+                line.setStrokeWidth(2);
+            }
+
         }else if (isCurved) {
             // Calculate offset angles for start and end
             double startAngle = angle + OFFSET_ANGLE;
@@ -158,17 +203,63 @@ public class Transition {
         }
     }
     private void drawSelfLoopSymbol(Pane pane) {
+        if (!(line instanceof CubicCurve)) return;
+
         CubicCurve curve = (CubicCurve) line;
         double t = 0.5;
 
         double x = calculateBezierCoordinate(curve.getStartX(), curve.getControlX1(), curve.getControlX2(), curve.getEndX(), t);
         double y = calculateBezierCoordinate(curve.getStartY(), curve.getControlY1(), curve.getControlY2(), curve.getEndY(), t);
 
+        double dx = calculateBezierDerivative(curve.getStartX(), curve.getControlX1(), curve.getControlX2(), curve.getEndX(), t);
+        double dy = calculateBezierDerivative(curve.getStartY(), curve.getControlY1(), curve.getControlY2(), curve.getEndY(), t);
+
+        double length = Math.sqrt(dx * dx + dy * dy);
+        dx /= length;
+        dy /= length;
+
+        double nx = -dy;
+        double ny = dx;
+
+        double offset = Constants.SYMBOL_OFFSET - Constants.RADIUS;
+        x += nx * offset;
+        y += ny * offset;
+
         text = new Text(symbol);
         text.setX(x - text.getBoundsInLocal().getWidth() / 2);
-        text.setY(y - text.getBoundsInLocal().getHeight() / 2);
+        text.setY(y + text.getBoundsInLocal().getHeight() / 4);
         pane.getChildren().add(text);
     }
+
+    public boolean isClicked(double x, double y) {
+        if (!isSelfLoop) return false;
+
+        if (line.contains(x, y)) return true;
+
+        CubicCurve curve = (CubicCurve) line;
+        for (double t = 0; t <= 1; t += 0.01) {
+            double px = calculateBezierCoordinate(curve.getStartX(), curve.getControlX1(), curve.getControlX2(), curve.getEndX(), t);
+            double py = calculateBezierCoordinate(curve.getStartY(), curve.getControlY1(), curve.getControlY2(), curve.getEndY(), t);
+            if (Math.abs(x - px) < CLICK_THRESHOLD && Math.abs(y - py) < CLICK_THRESHOLD) {
+                return true;
+            }
+        }
+
+        if (text != null) {
+            Bounds textBounds = text.getBoundsInParent();
+            return textBounds.contains(x, y);
+        }
+
+        return false;
+    }
+    // Rotate Circular  transition
+    public void rotateSelfLoop() {
+        if (isSelfLoop) {
+            selfLoopPosition = (selfLoopPosition + 1) % 4;
+            updatePosition();
+        }
+    }
+
     //calculate coordinates for curve line and straight line
     private double[] calculateCoordinates() {
         double x, y, nx, ny;
@@ -216,6 +307,11 @@ public class Transition {
         pane.getChildren().add(line);
         drawArrow(pane);
         drawSymbol(pane);
+        if (isSelfLoop) {
+            setClickableCursor(line, pane);
+            setClickableCursor(text, pane);
+            setClickableCursor(arrow, pane);
+        }
     }
 
     public void updatePosition() {
@@ -248,6 +344,16 @@ public class Transition {
                 draw(pane);
             }
         }
+    }
+    // Change cursor
+    private void setClickableCursor(Node node, Pane pane) {
+        node.setOnMouseEntered(event -> {
+            pane.setCursor(Cursor.HAND);
+        });
+
+        node.setOnMouseExited(event -> {
+            pane.setCursor(Cursor.DEFAULT);
+        });
     }
 
     public Shape getLine() {

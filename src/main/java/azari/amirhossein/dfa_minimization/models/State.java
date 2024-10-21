@@ -200,7 +200,6 @@ public class State {
     public void draw(Pane pane) {
         pane.getChildren().addAll(circle, text);
         makeDraggable();
-
         setDraggableCursor(circle, pane);
         setDraggableCursor(text, pane);
     }

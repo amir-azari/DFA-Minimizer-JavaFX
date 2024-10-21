@@ -5,6 +5,7 @@ import azari.amirhossein.dfa_minimization.models.State;
 import azari.amirhossein.dfa_minimization.utils.StateChangeListener;
 import azari.amirhossein.dfa_minimization.models.Transition;
 import javafx.fxml.FXML;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Alert;
@@ -54,6 +55,8 @@ public class DFAController implements StateChangeListener {
             State clickedState = getClickedState(x, y);
             if (clickedState != null) {
                 handleStateSelection(clickedState, event.isControlDown());
+            }else {
+                handleTransitionClick(x, y);
             }
         }
         if (event.getClickCount() == 2 && event.getButton() == MouseButton.PRIMARY && !event.isControlDown()) {  // Double-click to change state type
@@ -232,7 +235,16 @@ public class DFAController implements StateChangeListener {
     public void onStateChanged(State state) {
         updateTransitions();
     }
-
+    private void handleTransitionClick(double x, double y) {
+        for (Transition transition : transitionsList) {
+            if (transition.isClicked(x, y)) {
+                transition.rotateSelfLoop();
+                removeTransitionFromPane(transition);
+                transition.draw(drawingPane);
+                break;
+            }
+        }
+    }
     private void updateTransitions() {
         for (Transition transition : transitionsList) {
             transition.updatePosition();
