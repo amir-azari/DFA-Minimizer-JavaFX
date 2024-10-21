@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.shape.*?>
 
 <?import javafx.scene.canvas.Canvas?>
-<AnchorPane fx:id="drawingPane" onMouseClicked="#handleMouseClick" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="azari.amirhossein.dfa_minimization.DFAController">
+<AnchorPane fx:id="drawingPane" onMouseClicked="#handleMouseClick" prefHeight="600.0" prefWidth="800.0" stylesheets="@dfa.css" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="azari.amirhossein.dfa_minimization.DFAController">
     <Canvas fx:id="canvas" height="600" width="800" />
-    <Rectangle width="800" height="600" fill="rgba(255, 255, 255, 0.4)" />
+    <Rectangle fill="rgba(255, 255, 255, 0.4)" height="600" width="800" />
+
+    <children>
+        <Button layoutX="611.0" layoutY="545.0" mnemonicParsing="false" onAction="#handleUndo" text="Undo" />
+        <Button layoutX="697.0" layoutY="545.0" mnemonicParsing="false" onAction="#handleRedo" text="Redo" />
+        <Button layoutX="28.0" layoutY="545.0" mnemonicParsing="false" onAction="#handleBack" styleClass="back-button" text="Back " />
+        <Button fx:id="confirmButton" layoutX="300.0" layoutY="545.0" mnemonicParsing="false" prefHeight="36.0" prefWidth="200.0" styleClass="confirm-button" text="Confirm" />
+        <Line endX="856.0" endY="102.0" layoutX="-56.0" layoutY="424.0" startX="55.99998474121094" startY="102.0" stroke="#00000085" strokeLineJoin="ROUND" />
+    </children>
 </AnchorPane>

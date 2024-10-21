@@ -1,5 +1,6 @@
 package azari.amirhossein.dfa_minimization;
 
+import azari.amirhossein.dfa_minimization.animation.ButtonAnimation;
 import azari.amirhossein.dfa_minimization.utils.ParticleSystem;
 import azari.amirhossein.dfa_minimization.models.State;
 import azari.amirhossein.dfa_minimization.utils.StateChangeListener;
@@ -23,6 +24,14 @@ public class DFAController implements StateChangeListener {
     private Pane drawingPane;
     @FXML
     private Canvas canvas;
+
+    @FXML
+    private void handleUndo(){}
+    @FXML
+    private void handleRedo() {}
+
+    @FXML
+    private void handleBack() {}
 
     private String[] symbolsArray;
     private String[] statesArray;
