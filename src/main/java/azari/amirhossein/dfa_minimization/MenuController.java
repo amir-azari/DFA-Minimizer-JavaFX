@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static azari.amirhossein.dfa_minimization.utils.FXUtils.loadSceneFromFXML;
 import static azari.amirhossein.dfa_minimization.utils.FXUtils.showAlert;
 
 public class MenuController {

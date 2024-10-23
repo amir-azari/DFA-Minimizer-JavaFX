@@ -35,11 +35,12 @@ public class DFAController implements StateChangeListener {
         if (!undoStack.isEmpty()) {
             Transition lastTransition = undoStack.pop();
             transitionsList.remove(lastTransition);
-            removeTransitionOfGraph(lastTransition.getFromState().getLabel(), lastTransition.getSymbol());
+            removeTransitionOfGraph(lastTransition.getFromState().getLabel(), lastTransition.getSymbol() , lastTransition.getToState().getLabel());
             removeTransitionFromPane(lastTransition);
             redoStack.push(lastTransition);
 
         }
+        System.out.println(graph);
     }
     @FXML
     private void handleRedo() {
@@ -56,6 +57,7 @@ public class DFAController implements StateChangeListener {
 
             undoStack.push(lastUndone);
         }
+        System.out.println(graph);
     }
 
 
@@ -150,7 +152,6 @@ public class DFAController implements StateChangeListener {
 
     // Handle state selection logic
     private void handleStateSelection(State clickedState, boolean ctrlDown) {
-
         if (clickedState != null && ctrlDown) {
             clickedState.select();
             if (selectedState == null) {
@@ -160,7 +161,6 @@ public class DFAController implements StateChangeListener {
                 showMultiSymbolSelectionDialog().ifPresent(symbols -> {
                     String combinedSymbols = String.join(",", symbols);
                     addTransition(selectedState, clickedState, combinedSymbols);
-
                 });
                 selectedState.deselect();
                 if (selectedState.isFinalState()){
@@ -189,10 +189,13 @@ public class DFAController implements StateChangeListener {
         }
 
         if (existingForward != null) {
-            removeTransitionOfGraph(fromState.getLabel(), existingForward.getSymbol());
+            removeTransitionOfGraph(fromState.getLabel() , existingForward.getSymbol() , toState.getLabel());
+            int index = undoStack.indexOf(existingForward);
+            if (index != -1) {
+                undoStack.remove(index);
+            }
             transitionsList.remove(existingForward);
             removeTransitionFromPane(existingForward);
-            undoStack.push(existingForward);
         }
 
         boolean shouldBeCurved = existingReverse != null;
@@ -207,14 +210,12 @@ public class DFAController implements StateChangeListener {
         for (String symbol : symbols.split(",")) {
             graph.get(fromState.getLabel()).put(symbol, toState.getLabel());
         }
-
         if (existingReverse != null) {
-            removeTransitionOfGraph(fromState.getLabel(), existingReverse.getSymbol());
             existingReverse.setCurved(true);
             removeTransitionFromPane(existingReverse);
             existingReverse.draw(drawingPane);
         }
-
+        System.out.println(graph);
     }
     private void removeTransitionFromPane(Transition transition) {
         drawingPane.getChildren().remove(transition.getLine());
@@ -234,7 +235,6 @@ public class DFAController implements StateChangeListener {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Select Symbols");
         alert.setHeaderText("Choose symbols for the transition:");
-
         VBox checkboxContainer = new VBox();
         for (String symbol : symbolsArray) {
             CheckBox checkBox = new CheckBox(String.valueOf(symbol));
@@ -323,14 +323,15 @@ public class DFAController implements StateChangeListener {
             transition.redraw(drawingPane);
         }
     }
-    public void removeTransitionOfGraph(String outerKey, String innerKey) {
+    public void removeTransitionOfGraph(String outerKey, String innerKey, String value) {
 
-        for (String symbol : innerKey.split(",")) {
-            HashMap<String, String> innerMap = graph.get(outerKey);
+        HashMap<String, String> innerMap = graph.get(outerKey);
+        if (innerMap != null) {
+            for (String symbol : innerKey.split(",")) {
+                if (value.equals(innerMap.get(symbol))) {
+                    innerMap.remove(symbol);
 
-            if (innerMap != null) {
-                innerMap.remove(symbol);
-
+                }
             }
         }
     }
@@ -342,5 +343,4 @@ public class DFAController implements StateChangeListener {
             graph.get(fromState).put(symbol, toState);
         }
     }
-
 }
