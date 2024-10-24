@@ -177,6 +177,19 @@ public class DFAController implements StateChangeListener {
 
     // Add a transition between two states
     private void addTransition(State fromState, State toState, String symbols) {
+        HashMap<String, String> stateTransitions = graph.getOrDefault(fromState.getLabel(), new HashMap<>());
+        String[] symbolArray = symbols.split(",");
+
+        for (String symbol : symbolArray) {
+            String currentDestination = stateTransitions.get(symbol);
+            if (currentDestination != null && !currentDestination.equals(toState.getLabel())) {
+                showAlert("Invalid Transition",
+                        "Symbol '" + symbol + "' is already used for state '" + fromState.getLabel() +
+                                "' to reach state '" + currentDestination + "'");
+                return;
+            }
+        }
+
         Transition existingForward = null;
         Transition existingReverse = null;
 
@@ -205,7 +218,6 @@ public class DFAController implements StateChangeListener {
 
         undoStack.push(newTransition);
         redoStack.clear();
-
         // Split symbols and add each transition individually
         for (String symbol : symbols.split(",")) {
             graph.get(fromState.getLabel()).put(symbol, toState.getLabel());
