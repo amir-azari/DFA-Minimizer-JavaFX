@@ -21,6 +21,7 @@ import java.util.*;
 import static azari.amirhossein.dfa_minimization.utils.FXUtils.showAlert;
 
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -29,6 +30,8 @@ public class DFAController implements StateChangeListener {
     private Pane drawingPane;
     @FXML
     private Canvas canvas;
+    @FXML
+    private Button confirmButton;
 
     @FXML
     private void handleUndo() {
@@ -99,6 +102,18 @@ public class DFAController implements StateChangeListener {
     public void initialize() {
         ParticleSystem particleSystem = new ParticleSystem(800, 600, 80);
         particleSystem.startAnimation(canvas);
+
+        confirmButton.setOnMouseClicked(mouseEvent -> {
+            if (!areInputsValid()) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Invalid Input");
+                alert.setHeaderText("Please ensure all inputs are valid");
+                alert.setContentText(getErrorMessage());
+                alert.showAndWait();
+                return;
+            }
+
+        });
     }
 
     @FXML
@@ -354,5 +369,53 @@ public class DFAController implements StateChangeListener {
             }
             graph.get(fromState).put(symbol, toState);
         }
+    }
+
+    private boolean areInputsValid() {
+
+        if (drawingPane.getChildren().stream().noneMatch(node -> node instanceof Circle)) {
+            return false;
+        }
+        if (symbolsArray == null || symbolsArray.length == 0) {
+            return false;
+        }
+        if (statesArray == null || statesArray.length == 0) {
+            return false;
+        }
+        if (startState == null || startState.isEmpty()) {
+            return false;
+        }
+        if (finalStates == null || finalStates.isEmpty()) {
+            return false;
+        }
+        if (transitionsList.isEmpty()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private String getErrorMessage() {
+        if (drawingPane.getChildren().stream().noneMatch(node -> node instanceof Circle)) {
+            return "No states are displayed on the screen.";
+        }
+        if (symbolsArray == null || symbolsArray.length == 0) {
+            return "No symbols are defined.";
+        }
+        if (statesArray == null || statesArray.length == 0) {
+            return "No states are defined.";
+        }
+        if (startState == null || startState.isEmpty()) {
+            return "Start state is not set.";
+        }
+        if (finalStates == null || finalStates.isEmpty()) {
+            return "No final states are defined.";
+        }
+        if (transitionsList.isEmpty()) {
+            return "No transitions are defined.";
+        }
+
+
+        return "";
     }
 }
