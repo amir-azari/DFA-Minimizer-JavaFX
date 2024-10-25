@@ -1,5 +1,6 @@
 package azari.amirhossein.dfa_minimization;
 
+import azari.amirhossein.dfa_minimization.models.MinimizationProcess;
 import azari.amirhossein.dfa_minimization.utils.ParticleSystem;
 import azari.amirhossein.dfa_minimization.models.State;
 import azari.amirhossein.dfa_minimization.utils.StateChangeListener;
@@ -97,23 +98,33 @@ public class DFAController implements StateChangeListener {
     private State selectedState = null;
     private final Stack<Transition> undoStack = new Stack<>();
     private final Stack<Transition> redoStack = new Stack<>();
-
     @FXML
     public void initialize() {
         ParticleSystem particleSystem = new ParticleSystem(800, 600, 80);
         particleSystem.startAnimation(canvas);
 
-        confirmButton.setOnMouseClicked(mouseEvent -> {
-            if (!areInputsValid()) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Invalid Input");
-                alert.setHeaderText("Please ensure all inputs are valid");
-                alert.setContentText(getErrorMessage());
-                alert.showAndWait();
-                return;
-            }
+            confirmButton.setOnMouseClicked(mouseEvent -> {
+                if (!areInputsValid()) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Invalid Input");
+                    alert.setHeaderText("Please ensure all inputs are valid");
+                    alert.setContentText(getErrorMessage());
+                    alert.showAndWait();
+                    return;
+                }
 
-        });
+                ArrayList<String> symbolsList = new ArrayList<>(Arrays.asList(symbolsArray));
+                ArrayList<String> statesList = new ArrayList<>(Arrays.asList(statesArray));
+
+                ArrayList<String> finalStatesList = new ArrayList<>(finalStates);
+
+                MinimizationProcess process = new MinimizationProcess(symbolsList, statesList, startState, finalStatesList, graph , confirmButton);
+                process.start();
+
+
+            });
+
+
     }
 
     @FXML
