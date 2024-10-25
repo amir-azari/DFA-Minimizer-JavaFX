@@ -35,5 +35,5 @@ For questions or feedback, please reach out to me:
 - **Selecting Start and Final States:** You can select states for transitions by holding `CTRL` + `left-clicking` on them.
 - **Defining Final and Start States:** Double `left-click` on a state to mark it as a final state or a start state, or to remove these designations.
 - **Changing Position of Self-loop States:** `left-click` on self-loop states to change their position.
-
-
+- **Managing Transitions:** You can manage transitions using `Undo` and `Redo` functionality.
+- **Updating Transitions:** Transitions can be updated as needed.
