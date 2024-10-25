@@ -37,3 +37,9 @@ For questions or feedback, please reach out to me:
 - **Changing Position of Self-loop States:** `left-click` on self-loop states to change their position.
 - **Managing Transitions:** You can manage transitions using `Undo` and `Redo` functionality.
 - **Updating Transitions:** Transitions can be updated as needed.
+
+## Demo
+<p float="left">
+  <img src="demo/dfa.png" width="49.5%" />
+  <img src="demo/min%20dfa.png" width="49.5%" />
+</p>
