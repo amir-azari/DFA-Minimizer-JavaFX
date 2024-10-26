@@ -39,7 +39,14 @@ For questions or feedback, please reach out to me:
 - **Updating Transitions:** Transitions can be updated as needed.
 
 ## Demo
-<p float="left">
-  <img src="demo/dfa.png" width="49.5%" />
-  <img src="demo/min%20dfa.png" width="49.5%" />
+
+
+<p float="left" align="center">
+  <img src="demo/dfa.png" width="49%" />
+  <img src="demo/min%20dfa.png" width="49%" />
 </p>
+<div align="center">
+  <img src="demo/dfa.gif" width="49%" />
+</div>
+
+
