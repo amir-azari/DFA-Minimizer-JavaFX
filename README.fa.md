@@ -3,8 +3,8 @@
 # مینیمایزر و ویژوالایزر DFA
 
 <div>
-  <a href="README.md" style="display: inline-block; padding: 8px 16px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; margin: 0 5px;">English</a>
-  <a href="README.fa.md" style="display: inline-block; padding: 8px 16px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px; margin: 0 5px;">Persina</a>
+  <a href="README.md">English</a> |
+  <a href="README.fa.md">Persina</a>
 </div>
 
 
