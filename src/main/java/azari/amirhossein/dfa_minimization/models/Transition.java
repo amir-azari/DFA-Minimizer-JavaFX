@@ -51,58 +51,56 @@ public class Transition {
         double angle = Math.atan2(endY - startY, endX - startX);
 
         if (isSelfLoop){
-            if (isSelfLoop) {
-                double controlX1, controlY1, controlX2, controlY2;
+            double controlX1, controlY1, controlX2, controlY2;
 
-                switch (selfLoopPosition) {
-                    case 0: // Top
-                        startX = fromState.getX() - (Constants.RADIUS / 2);
-                        startY = fromState.getY() - Constants.RADIUS;
-                        endX = startX + Constants.RADIUS;
-                        endY = startY;
-                        controlX1 = startX - 25;
-                        controlY1 = startY - 25;
-                        controlX2 = endX + 25;
-                        controlY2 = endY - 25;
-                        break;
-                    case 1: // Right
-                        startX = fromState.getX() + Constants.RADIUS;
-                        startY = fromState.getY() - (Constants.RADIUS / 2);
-                        endX = startX;
-                        endY = startY + Constants.RADIUS;
-                        controlX1 = startX + 25;
-                        controlY1 = startY - 25;
-                        controlX2 = endX + 25;
-                        controlY2 = endY + 25;
-                        break;
-                    case 2: // Bottom
-                        startX = fromState.getX() + (Constants.RADIUS / 2);
-                        startY = fromState.getY() + Constants.RADIUS;
-                        endX = startX - Constants.RADIUS;
-                        endY = startY;
-                        controlX1 = startX + 25;
-                        controlY1 = startY + 25;
-                        controlX2 = endX - 25;
-                        controlY2 = endY + 25;
-                        break;
-                    case 3: // Left
-                        startX = fromState.getX() - Constants.RADIUS;
-                        startY = fromState.getY() + (Constants.RADIUS / 2);
-                        endX = startX;
-                        endY = startY - Constants.RADIUS;
-                        controlX1 = startX - 25;
-                        controlY1 = startY + 25;
-                        controlX2 = endX - 25;
-                        controlY2 = endY - 25;
-                        break;
-                    default:
-                        throw new IllegalStateException("Unexpected value: " + selfLoopPosition);
-                }
-                line = new CubicCurve(startX, startY, controlX1, controlY1, controlX2, controlY2, endX, endY);
-                line.setFill(null);
-                line.setStroke(Color.web(Constants.COLOR_TRANSITION));
-                line.setStrokeWidth(2);
+            switch (selfLoopPosition) {
+                case 0: // Top
+                    startX = fromState.getX() - (Constants.RADIUS / 2);
+                    startY = fromState.getY() - Constants.RADIUS;
+                    endX = startX + Constants.RADIUS;
+                    endY = startY;
+                    controlX1 = startX - 25;
+                    controlY1 = startY - 25;
+                    controlX2 = endX + 25;
+                    controlY2 = endY - 25;
+                    break;
+                case 1: // Right
+                    startX = fromState.getX() + Constants.RADIUS;
+                    startY = fromState.getY() - (Constants.RADIUS / 2);
+                    endX = startX;
+                    endY = startY + Constants.RADIUS;
+                    controlX1 = startX + 25;
+                    controlY1 = startY - 25;
+                    controlX2 = endX + 25;
+                    controlY2 = endY + 25;
+                    break;
+                case 2: // Bottom
+                    startX = fromState.getX() + (Constants.RADIUS / 2);
+                    startY = fromState.getY() + Constants.RADIUS;
+                    endX = startX - Constants.RADIUS;
+                    endY = startY;
+                    controlX1 = startX + 25;
+                    controlY1 = startY + 25;
+                    controlX2 = endX - 25;
+                    controlY2 = endY + 25;
+                    break;
+                case 3: // Left
+                    startX = fromState.getX() - Constants.RADIUS;
+                    startY = fromState.getY() + (Constants.RADIUS / 2);
+                    endX = startX;
+                    endY = startY - Constants.RADIUS;
+                    controlX1 = startX - 25;
+                    controlY1 = startY + 25;
+                    controlX2 = endX - 25;
+                    controlY2 = endY - 25;
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected value: " + selfLoopPosition);
             }
+            line = new CubicCurve(startX, startY, controlX1, controlY1, controlX2, controlY2, endX, endY);
+            line.setFill(null);
+            line.setStroke(Color.web(Constants.COLOR_TRANSITION));
+            line.setStrokeWidth(2);
 
         }else if (isCurved) {
             // Calculate offset angles for start and end

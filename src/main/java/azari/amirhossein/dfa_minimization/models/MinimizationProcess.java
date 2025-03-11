@@ -198,24 +198,35 @@ public class MinimizationProcess {
 
     public void deleteState() {
         ArrayList<String> temp = new ArrayList<>();
+        System.out.println("\n=== Starting State Removal Process ===");
+        System.out.println("Initial states: " + states);
+        System.out.println("Start state: " + startState);
+        System.out.println("Final state: " + finalStates);
 
         temp.add(startState);
 
         for (int i = 0; i < temp.size(); i++) {
             for (String symbol : symbols) {
-                if (!temp.contains((graph.get(temp.get(i)).get(symbol)))) {
-                    temp.add(graph.get(temp.get(i)).get(symbol));
+                String nextState = graph.get(temp.get(i)).get(symbol);
+                if (!temp.contains(nextState)) {
+                    temp.add(nextState);
+                    System.out.println("Added reachable state: " + nextState + " through symbol: " + symbol + " from state: " + temp.get(i));
                 }
-
             }
         }
+        
+        System.out.println("\nReachable states: " + temp);
+        
         for (int i = 0; i < states.size(); i++) {
             if (!temp.contains(states.get(i))) {
+                System.out.println("Removing unreachable state: " + states.get(i));
                 graph.remove(states.get(i));
                 states.remove(i);
                 i--;
             }
         }
+        System.out.println("Final states after removal: " + states);
+        System.out.println("=== State Removal Process Complete ===\n");
     }
 
 
@@ -326,14 +337,20 @@ public class MinimizationProcess {
 
     //minimization DFA
     public void minimizationDFA(ArrayList<ArrayList<String>> resultStates) {
+
+        System.out.println("\n=== Starting DFA Minimization Process ===");
+        System.out.println("Result states before mapping: " + resultStates);
+        
         // Specify the final and start states in minimization DFA
         HashMap<ArrayList<String>, String> stateMapping = new HashMap<>();
         char stateName = 'A';
 
         for (ArrayList<String> stateGroup : resultStates) {
             stateMapping.put(stateGroup, String.valueOf(stateName));
+            System.out.println("Mapping state group " + stateGroup + " to " + stateName);
             stateName++;
         }
+
         //print minimization DFA
         HashMap<String, HashMap<String, String>> minimizedGraph = new HashMap<>();
         System.out.println("\nTransitions for minimized DFA:");
@@ -346,32 +363,63 @@ public class MinimizationProcess {
                         String nextState = stateMapping.get(targetState);
                         minimizedGraph.putIfAbsent(currentState, new HashMap<>());
                         minimizedGraph.get(currentState).put(symbol, nextState);
+                        System.out.println("Added transition: " + currentState + " --" + symbol + "--> " + nextState);
                         break;
                     }
                 }
             }
         }
+
         String start = "";
         Set<String> finales = new HashSet<>();
 
+        System.out.println("\n=== Processing States ===");
+        System.out.println("Original final states: " + finalStates);
+        System.out.println("Result states to process: " + resultStates);
+
+        // Process start state
         for (ArrayList<String> state : resultStates) {
             if (state.contains(startState)) {
                 start = stateMapping.get(state);
+                System.out.println("Selected start state: " + start + " (mapped from " + state + ")");
             }
         }
 
+        // Process final states
         for (ArrayList<String> state : resultStates) {
+            System.out.println("\nChecking state group: " + state);
             for (String finalState : finalStates) {
+                System.out.println("Checking if contains final state: " + finalState);
                 if (state.contains(finalState)) {
-                    finales.add(stateMapping.get(state));
+                    String mappedState = stateMapping.get(state);
+                    finales.add(mappedState);
+                    System.out.println("Added final state: " + mappedState + " (mapped from group containing " + finalState + ")");
                 }
             }
         }
+
+        if (finales.isEmpty()) {
+            System.out.println("WARNING: No final states were mapped in the minimized DFA!");
+            showError("DFA Minimization Warning", "No final states were found in the minimized DFA. This may indicate an error in the minimization process.");
+            return;
+        }
+
+        System.out.println("\nFinal states mapping complete");
+        System.out.println("Final states in minimized DFA: " + finales);
+        System.out.println("=== Final States Processing Complete ===\n");
+
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/azari/amirhossein/dfa_minimization/minimizedDFA.fxml"));
             Parent root = loader.load();
 
             MinimizedDFAController controller = loader.getController();
+            
+            // Add debug print before setting DFA data
+            System.out.println("\n=== Setting DFA Data in Controller ===");
+            System.out.println("Start state: " + start);
+            System.out.println("Final states being set: " + finales);
+            System.out.println("Minimized graph: " + minimizedGraph);
+            
             controller.setDFAData(start, finales, minimizedGraph);
 
             Scene mainScene = confirmBtn.getScene();
@@ -403,3 +451,5 @@ public class MinimizationProcess {
     }
 
 }
+
+
