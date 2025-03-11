@@ -1,8 +1,11 @@
 # DFA Minimizer and Visualizer
 
+<div>
+  <a href="README.md" style="display: inline-block; padding: 8px 16px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; margin: 0 5px;">English</a>
+  <a href="README.fa.md" style="display: inline-block; padding: 8px 16px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px; margin: 0 5px;">Persina</a>
+</div>
 
 This project provides a JavaFX-based tool for visualizing, editing, and minimizing DFAs (Deterministic Finite Automata). It helps users observe, analyze, and optimize state machines with an intuitive interface.
-
 
 ## Features
 - **DFA Visualization:** Ability to visually draw and manipulate DFAs.
@@ -10,11 +13,11 @@ This project provides a JavaFX-based tool for visualizing, editing, and minimizi
 - **Interactive State Management:** Draggable states and intuitive controls for managing state transitions.
 - **Built with Java and JavaFX:** This project is implemented using Java and JavaFX for an interactive user experience.
 
-
 ## Installation and Usage
 1. **Clone the Repository:**
    ```bash
    https://github.com/amir-azari/DFA-Minimizer-JavaFX.git
+   ```
 
 ## Contributing
 We welcome your contributions! Please report issues or submit pull requests for collaboration.
@@ -22,7 +25,6 @@ We welcome your contributions! Please report issues or submit pull requests for 
 ## Contact
 For questions or feedback, please reach out to me:
 - Email: ah.azari.wr@gmail.com
-
 
 ## How to add input
 
