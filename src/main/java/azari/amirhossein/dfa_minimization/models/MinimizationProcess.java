@@ -69,62 +69,147 @@ public class MinimizationProcess {
     }
 
     private void validateDFA() throws IllegalStateException {
+        List<String> warnings = new ArrayList<>();
+        
         // Check for states existence
         if (states == null || states.isEmpty()) {
-            throw new IllegalStateException("At least one state must exist");
+            throw new IllegalStateException("Error: No states defined.\nSuggestion: Add at least one state to your DFA.");
         }
 
         // Check for symbols existence
         if (symbols == null || symbols.isEmpty()) {
-            throw new IllegalStateException("At least one symbol must exist");
+            throw new IllegalStateException("Error: No input symbols defined.\nSuggestion: Add at least one input symbol to your DFA.");
+        }
+
+        // Check for epsilon transitions (empty string transitions)
+        if (symbols.contains("ε") || symbols.contains("")) {
+            warnings.add("Warning: Epsilon transitions are not allowed in DFAs.\nSuggestion: Remove epsilon transitions as they are only valid in NFAs.");
         }
 
         // Validate start state
-        if (startState == null || startState.isEmpty() || !states.contains(startState)) {
-            throw new IllegalStateException("Start state must be valid and exist in the states list");
+        if (startState == null || startState.isEmpty()) {
+            throw new IllegalStateException("Error: No start state defined.\nSuggestion: Select one state as the start state.");
+        }
+        if (!states.contains(startState)) {
+            throw new IllegalStateException("Error: Start state '" + startState + "' does not exist in the states list.\nSuggestion: Choose a valid state as the start state.");
         }
 
         // Validate final states
         if (finalStates == null || finalStates.isEmpty()) {
-            throw new IllegalStateException("At least one final state must exist");
+            throw new IllegalStateException("Error: No final states defined.\nSuggestion: Select at least one state as a final state.");
         }
         
         for (String finalState : finalStates) {
             if (!states.contains(finalState)) {
-                throw new IllegalStateException("Final state " + finalState + " does not exist in the states list");
+                throw new IllegalStateException("Error: Final state '" + finalState + "' does not exist in the states list.\nSuggestion: Remove or correct the invalid final state.");
             }
         }
 
-        // Validate transition table
-        validateTransitionTable();
-    }
-
-    private void validateTransitionTable() throws IllegalStateException {
-        if (graph == null) {
-            throw new IllegalStateException("Transition table cannot be null");
+        // Check if start state is also a final state (not an error, but might be unintended)
+        if (finalStates.contains(startState)) {
+            warnings.add("Note: Start state is also a final state. This means empty string will be accepted.");
         }
 
+        // Check for potential dead states
+        checkForDeadStates(warnings);
+
+        // Validate transition table
+        validateTransitionTable(warnings);
+
+        // Show warnings if any exist
+        if (!warnings.isEmpty()) {
+            showWarnings(warnings);
+        }
+    }
+
+    private void validateTransitionTable(List<String> warnings) throws IllegalStateException {
+        if (graph == null) {
+            throw new IllegalStateException("Error: Transition table is not initialized.\nSuggestion: Create a transition table for your DFA.");
+        }
+
+        // Check for missing transitions
         for (String state : states) {
             if (!graph.containsKey(state)) {
-                throw new IllegalStateException("Transitions for state " + state + " are not defined");
+                throw new IllegalStateException("Error: No transitions defined for state '" + state + "'.\nSuggestion: Define transitions for all states.");
             }
 
             HashMap<String, String> transitions = graph.get(state);
             if (transitions == null) {
-                throw new IllegalStateException("Transitions for state " + state + " cannot be null");
+                throw new IllegalStateException("Error: Transitions for state '" + state + "' are null.\nSuggestion: Initialize transitions for state '" + state + "'.");
             }
 
+            // Check for missing or invalid transitions
             for (String symbol : symbols) {
                 if (!transitions.containsKey(symbol)) {
-                    throw new IllegalStateException("Transition for symbol " + symbol + " in state " + state + " is not defined");
+                    throw new IllegalStateException("Error: Missing transition for symbol '" + symbol + "' in state '" + state + "'.\nSuggestion: Define a transition for every symbol in each state.");
                 }
                 
                 String targetState = transitions.get(symbol);
+                if (targetState == null || targetState.isEmpty()) {
+                    throw new IllegalStateException("Error: Empty transition for symbol '" + symbol + "' in state '" + state + "'.\nSuggestion: Specify a valid target state.");
+                }
+                
                 if (!states.contains(targetState)) {
-                    throw new IllegalStateException("Target state " + targetState + " for transition from " + state + " with symbol " + symbol + " is not valid");
+                    throw new IllegalStateException("Error: Invalid target state '" + targetState + "' for transition from state '" + state + "' with symbol '" + symbol + "'.\nSuggestion: Use only existing states as transition targets.");
+                }
+            }
+
+            // Check for non-determinism (multiple transitions with same symbol)
+            Set<String> usedSymbols = new HashSet<>();
+            for (Map.Entry<String, String> transition : transitions.entrySet()) {
+                if (!usedSymbols.add(transition.getKey())) {
+                    throw new IllegalStateException("Error: Multiple transitions found for symbol '" + transition.getKey() + "' in state '" + state + "'.\nSuggestion: DFAs must have exactly one transition for each symbol in each state.");
                 }
             }
         }
+    }
+
+    private void checkForDeadStates(List<String> warnings) {
+        for (String state : states) {
+            if (!finalStates.contains(state)) {
+                boolean canReachFinal = canReachFinalState(state, new HashSet<>());
+                if (!canReachFinal) {
+                    warnings.add("Warning: State '" + state + "' cannot reach any final state.\nSuggestion: This might be a dead state. Consider adding a path to a final state or removing this state.");
+                }
+            }
+        }
+    }
+
+    private boolean canReachFinalState(String currentState, Set<String> visited) {
+        if (finalStates.contains(currentState)) {
+            return true;
+        }
+        
+        if (visited.contains(currentState)) {
+            return false;
+        }
+        
+        visited.add(currentState);
+        
+        HashMap<String, String> transitions = graph.get(currentState);
+        if (transitions != null) {
+            for (String targetState : transitions.values()) {
+                if (canReachFinalState(targetState, visited)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+
+    private void showWarnings(List<String> warnings) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("DFA Validation Warnings");
+        alert.setHeaderText("The following issues were found:");
+        
+        StringBuilder content = new StringBuilder();
+        for (String warning : warnings) {
+            content.append("• ").append(warning).append("\n\n");
+        }
+        
+        alert.setContentText(content.toString());
+        alert.showAndWait();
     }
 
     private void findInitialDistinctStates(ArrayList<ArrayList<String>> different) {
