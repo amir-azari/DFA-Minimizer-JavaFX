@@ -30,13 +30,8 @@ public class MinimizedDFAController implements StateChangeListener {
     private List<Transition> transitions = new ArrayList<>();
 
     private Scene mainScene;
-    public void setDFAData(String startState, Set<String> finalStates,
-                           HashMap<String, HashMap<String, String>> minDFAGraph) {
-        this.startState = startState;
-        this.finalStates = finalStates;
-        this.minDFAGraph = minDFAGraph;
-        refreshView();
-    }
+    private ParticleSystem particleSystem;
+
     @FXML
     private Canvas canvas;
     @FXML
@@ -45,9 +40,62 @@ public class MinimizedDFAController implements StateChangeListener {
     private Button menuBtn;
 
     @FXML
+    public void initialize() {
+        if (canvas == null || anchorPane == null) {
+            throw new IllegalStateException("FXML components not properly initialized");
+        }
+
+        initializeParticleSystem();
+        initializeMenuButton();
+
+        // Initialize view if data is available
+        if (minDFAGraph != null && !minDFAGraph.isEmpty()) {
+            refreshView();
+        }
+    }
+
+    private void initializeParticleSystem() {
+        particleSystem = new ParticleSystem(800, 600, 80);
+        particleSystem.startAnimation(canvas);
+    }
+
+    private void initializeMenuButton() {
+        if (menuBtn != null) {
+            menuBtn.setOnMouseClicked(mouseEvent -> {
+                cleanup();
+                FXUtils.loadSceneFromFXML("/azari/amirhossein/dfa_minimization/menu.fxml", mouseEvent);
+            });
+        }
+    }
+
+    private void cleanup() {
+        if (particleSystem != null) {
+            particleSystem.stop();
+        }
+
+        cleanupTransitions();
+
+        if (stateMap != null) {
+            stateMap.values().forEach(state -> {
+                state.removeStateChangeListener(this);
+                if (anchorPane != null) {
+                    anchorPane.getChildren().removeAll(
+                        state.getCircle(),
+                        state.getLabelNode(),
+                        state.getStartArrow()
+                    );
+                }
+            });
+            stateMap.clear();
+        }
+    }
+
+    @FXML
     public void handleBack() {
         try {
+            cleanup();
             Stage stage = (Stage) anchorPane.getScene().getWindow();
+            
             if (mainScene != null) {
                 stage.setScene(mainScene);
             } else {
@@ -56,16 +104,29 @@ public class MinimizedDFAController implements StateChangeListener {
                 mainScene = new Scene(root);
                 stage.setScene(mainScene);
             }
-            stage.show();
-
+            
             FadeTransition fadeIn = new FadeTransition(Duration.millis(700), mainScene.getRoot());
             fadeIn.setFromValue(0);
             fadeIn.setToValue(1);
             fadeIn.play();
 
         } catch (Exception e) {
+            System.err.println("Error navigating back: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    public void setDFAData(String startState, Set<String> finalStates,
+                           HashMap<String, HashMap<String, String>> minDFAGraph) {
+        if (startState == null || finalStates == null || minDFAGraph == null) {
+            throw new IllegalArgumentException("DFA data cannot be null");
+        }
+
+        this.startState = startState;
+        this.finalStates = new HashSet<>(finalStates);
+        this.minDFAGraph = new HashMap<>(minDFAGraph);
+        
+        refreshView();
     }
 
     @FXML
@@ -78,91 +139,126 @@ public class MinimizedDFAController implements StateChangeListener {
 
     }
 
-    @FXML
-    public void initialize() {
-        ParticleSystem particleSystem = new ParticleSystem(800, 600, 80);
-        particleSystem.startAnimation(canvas);
-
-        // This will be called when FXML is loaded
-        if (minDFAGraph != null && !minDFAGraph.isEmpty()) {
-            refreshView();
-        }
-        menuBtn.setOnMouseClicked(mouseEvent -> {
-            FXUtils.loadSceneFromFXML("/azari/amirhossein/dfa_minimization/menu.fxml", mouseEvent);
-        });
-    }
+    private static final double RADIUS_FACTOR = 0.6;
+    private static final double MIN_DISTANCE = 50.0;
 
     private void createStates() {
-        stateMap.clear(); // Clear existing states
+        if (minDFAGraph == null) {
+            throw new IllegalStateException("DFA graph is not initialized");
+        }
+
+        stateMap.clear();
 
         // Get all states from the graph
         Set<String> allStates = new HashSet<>(minDFAGraph.keySet());
         minDFAGraph.values().forEach(stateTransitions ->
                 allStates.addAll(stateTransitions.values()));
 
-        // Calculate positions in a circular layout
-        int totalStates = allStates.size();
-        int stateId = 0;
+        if (allStates.isEmpty()) {
+            return;
+        }
+
+        // Calculate layout parameters
         double centerX = anchorPane.getPrefWidth() / 2;
         double centerY = anchorPane.getPrefHeight() / 2;
-        double radius = Math.min(centerX, centerY) * 0.6;
+        double radius = Math.min(centerX, centerY) * RADIUS_FACTOR;
+        
+        // Adjust radius if states would be too close
+        int totalStates = allStates.size();
+        double circumference = 2 * Math.PI * radius;
+        double spacing = circumference / totalStates;
+        if (spacing < MIN_DISTANCE) {
+            radius = (MIN_DISTANCE * totalStates) / (2 * Math.PI);
+        }
 
+        int stateId = 0;
         for (String stateLabel : allStates) {
-            // Calculate position on circle
-            double angle = (2 * Math.PI * stateId) / totalStates;
-            double x = centerX + radius * Math.cos(angle);
-            double y = centerY + radius * Math.sin(angle);
+            try {
+                double angle = (2 * Math.PI * stateId) / totalStates;
+                double x = centerX + radius * Math.cos(angle);
+                double y = centerY + radius * Math.sin(angle);
 
-            // Create state
-            boolean isFinal = finalStates.contains(stateLabel);
-            boolean isStart = stateLabel.equals(startState);
-            State state = new State(stateId, stateLabel, isFinal, isStart, x, y);
-            state.addStateChangeListener(this);
+                boolean isFinal = finalStates.contains(stateLabel);
+                boolean isStart = stateLabel.equals(startState);
+                State state = new State(stateId, stateLabel, isFinal, isStart, x, y);
+                state.addStateChangeListener(this);
 
-            stateMap.put(stateLabel, state);
-            stateId++;
+                stateMap.put(stateLabel, state);
+                stateId++;
+            } catch (Exception e) {
+                System.err.println("Error creating state " + stateLabel + ": " + e.getMessage());
+            }
+        }
+    }
+
+    private void cleanupTransitions() {
+        transitions.forEach(this::removeTransitionFromPane);
+        transitions.clear();
+    }
+
+    private void removeTransitionFromPane(Transition transition) {
+        if (anchorPane != null) {
+            anchorPane.getChildren().removeAll(
+                transition.getLine(),
+                transition.getArrow(),
+                transition.getText()
+            );
         }
     }
 
     private void createTransitions() {
-        transitions.clear();
+        if (minDFAGraph == null || stateMap.isEmpty()) {
+            return;
+        }
+
+        cleanupTransitions();
 
         // Map to store transitions between same states with different symbols
         Map<String, List<String>> combinedTransitions = new HashMap<>();
 
-        // First pass: Collect all transitions between same states
+        // Collect all transitions between same states
         minDFAGraph.forEach((fromState, stateTransitions) -> {
-            stateTransitions.forEach((symbol, toState) -> {
-                // Create a key for the state pair
-                String stateKey = fromState + "->" + toState;
+            if (!stateMap.containsKey(fromState)) {
+                System.err.println("Warning: Source state " + fromState + " not found in state map");
+                return;
+            }
 
-                // Add symbol to the list of symbols for this state pair
+            stateTransitions.forEach((symbol, toState) -> {
+                if (!stateMap.containsKey(toState)) {
+                    System.err.println("Warning: Target state " + toState + " not found in state map");
+                    return;
+                }
+
+                if (symbol == null || symbol.trim().isEmpty()) {
+                    System.err.println("Warning: Empty transition symbol between " + fromState + " and " + toState);
+                    return;
+                }
+
+                String stateKey = fromState + "->" + toState;
                 combinedTransitions.computeIfAbsent(stateKey, k -> new ArrayList<>())
                         .add(symbol);
             });
         });
 
-        // Second pass: Create transitions with combined symbols
+        // Create transitions with combined symbols
         combinedTransitions.forEach((stateKey, symbols) -> {
-            String[] states = stateKey.split("->");
-            String fromState = states[0];
-            String toState = states[1];
+            try {
+                String[] states = stateKey.split("->");
+                String fromState = states[0];
+                String toState = states[1];
 
-            State source = stateMap.get(fromState);
-            State target = stateMap.get(toState);
+                State source = stateMap.get(fromState);
+                State target = stateMap.get(toState);
 
-            // Sort symbols for consistent display
-            Collections.sort(symbols);
+                Collections.sort(symbols);
+                String combinedSymbol = String.join(",", symbols);
 
-            // Join symbols with comma
-            String combinedSymbol = String.join(",", symbols);
-
-            // Check if there's a reverse transition
-            boolean shouldCurve = combinedTransitions.containsKey(toState + "->" + fromState);
-
-            // Create single transition with combined symbols
-            Transition transition = new Transition(source, target, combinedSymbol, shouldCurve);
-            transitions.add(transition);
+                boolean shouldCurve = combinedTransitions.containsKey(toState + "->" + fromState);
+                Transition transition = new Transition(source, target, combinedSymbol, shouldCurve);
+                transitions.add(transition);
+            } catch (Exception e) {
+                System.err.println("Error creating transition " + stateKey + ": " + e.getMessage());
+            }
         });
     }
 
@@ -198,35 +294,45 @@ public class MinimizedDFAController implements StateChangeListener {
         this.minDFAGraph = minimizedGraph;
     }
 
-
-    private void removeTransitionFromPane(Transition transition) {
-        anchorPane.getChildren().remove(transition.getLine());
-        anchorPane.getChildren().remove(transition.getArrow());
-        anchorPane.getChildren().remove(transition.getText());
-    }
-
     @Override
     public void onStateChanged(State state) {
-        updateTransitions();
+        try {
+            updateTransitions();
+        } catch (Exception e) {
+            System.err.println("Error updating transitions: " + e.getMessage());
+        }
     }
 
     private void handleTransitionClick(double x, double y) {
+        if (x < 0 || y < 0 || x > anchorPane.getWidth() || y > anchorPane.getHeight()) {
+            return;
+        }
+
         for (Transition transition : transitions) {
             if (transition.isClicked(x, y)) {
-                transition.rotateSelfLoop();
-                removeTransitionFromPane(transition);
-                transition.draw(anchorPane);
+                try {
+                    transition.rotateSelfLoop();
+                    removeTransitionFromPane(transition);
+                    transition.draw(anchorPane);
+                } catch (Exception e) {
+                    System.err.println("Error handling transition click: " + e.getMessage());
+                }
                 break;
             }
         }
     }
 
-
     private void updateTransitions() {
-        for (Transition transition : transitions) {
-            transition.updatePosition();
-            transition.redraw(anchorPane);
-        }
+        if (anchorPane == null) return;
+
+        transitions.forEach(transition -> {
+            try {
+                transition.updatePosition();
+                transition.redraw(anchorPane);
+            } catch (Exception e) {
+                System.err.println("Error updating transition: " + e.getMessage());
+            }
+        });
     }
 
     public void setMainScene(Scene mainScene) {

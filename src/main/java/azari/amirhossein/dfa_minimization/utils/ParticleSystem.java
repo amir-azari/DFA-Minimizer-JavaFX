@@ -17,6 +17,7 @@ public class ParticleSystem {
     private final double canvasHeight;
     private double mouseX = 0.0;
     private double mouseY = 0.0;
+    private Timeline timeline;
 
     private static class Particle {
         double x, y, vx, vy;
@@ -48,7 +49,7 @@ public class ParticleSystem {
 
     public void startAnimation(Canvas canvas) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
-        Timeline timeline = new Timeline(new KeyFrame(Duration.millis(16), e -> {
+        timeline = new Timeline(new KeyFrame(Duration.millis(16), e -> {
             updateParticles();
             drawParticles(gc);
         }));
@@ -59,6 +60,13 @@ public class ParticleSystem {
             mouseX = event.getX();
             mouseY = event.getY();
         });
+    }
+
+    public void stop() {
+        if (timeline != null) {
+            timeline.stop();
+            timeline = null;
+        }
     }
 
     private void updateParticles() {

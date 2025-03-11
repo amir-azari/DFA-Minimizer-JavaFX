@@ -240,4 +240,20 @@ public class State {
     public String getLabel() {
         return label;
     }
+
+    public Circle getCircle() {
+        return circle;
+    }
+
+    public Text getLabelNode() {
+        return text;
+    }
+
+    public Line getStartArrow() {
+        return startArrow;
+    }
+
+    public void removeStateChangeListener(StateChangeListener listener) {
+        listeners.remove(listener);
+    }
 }

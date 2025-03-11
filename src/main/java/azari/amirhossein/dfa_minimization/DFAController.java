@@ -115,13 +115,10 @@ public class DFAController implements StateChangeListener {
 
                 ArrayList<String> symbolsList = new ArrayList<>(Arrays.asList(symbolsArray));
                 ArrayList<String> statesList = new ArrayList<>(Arrays.asList(statesArray));
-
                 ArrayList<String> finalStatesList = new ArrayList<>(finalStates);
 
-                MinimizationProcess process = new MinimizationProcess(symbolsList, statesList, startState, finalStatesList, graph , confirmButton);
+                MinimizationProcess process = new MinimizationProcess(symbolsList, statesList, startState, finalStatesList, graph, confirmButton);
                 process.start();
-
-
             });
 
 

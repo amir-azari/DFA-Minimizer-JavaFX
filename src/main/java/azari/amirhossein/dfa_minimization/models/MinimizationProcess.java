@@ -5,6 +5,7 @@ import javafx.animation.FadeTransition;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -12,15 +13,15 @@ import javafx.util.Duration;
 import java.util.*;
 
 public class MinimizationProcess {
-    private ArrayList<String> symbols;
-    private ArrayList<String> states;
-    private String startState;
-    private ArrayList<String> finalStates;
+    private final ArrayList<String> symbols;
+    private final ArrayList<String> states;
+    private final String startState;
+    private final ArrayList<String> finalStates;
     HashMap<String, HashMap<String, String>> graph;
     ArrayList<ArrayList<String>> resultState = new ArrayList<>();
-    Button confirmBtn ;
-    private Scene mainScene;
-    public MinimizationProcess(ArrayList<String> symbols, ArrayList<String> states, String startState, ArrayList<String> finalStates, HashMap<String, HashMap<String, String>> graph , Button confirmBtn) {
+    Button confirmBtn;
+
+    public MinimizationProcess(ArrayList<String> symbols, ArrayList<String> states, String startState, ArrayList<String> finalStates, HashMap<String, HashMap<String, String>> graph, Button confirmBtn) {
         this.symbols = symbols;
         this.states = states;
         this.startState = startState;
@@ -29,106 +30,170 @@ public class MinimizationProcess {
         this.confirmBtn = confirmBtn;
     }
 
-
     public void start() {
+        try {
+            // Validate DFA before starting the process
+            validateDFA();
 
-        // Remove all the states that are unreachable from the start state via any
-        deleteState();
+            // Remove unreachable states
+            deleteState();
 
-        int numOfState = states.size();
+            int numOfState = states.size();
+            String[][] table = new String[numOfState][numOfState];
+            ArrayList<ArrayList<String>> different = new ArrayList<>();
+            ArrayList<ArrayList<String>> unknown = new ArrayList<>();
+            ArrayList<String> check = new ArrayList<>();
+            ArrayList<String> checkRevers;
 
-        //create table
-        String[][] table = new String[numOfState][numOfState];
+            initTable(table);
 
-        //Distinct states
-        ArrayList<ArrayList<String>> different = new ArrayList<>();
-        //Unknown states
-        ArrayList<ArrayList<String>> unknown = new ArrayList<>();
+            // Find initial distinct states (final and non-final states)
+            findInitialDistinctStates(different);
+            markTable(different, table);
 
-        //To check pair statuses
-        ArrayList<String> check = new ArrayList<>();
-        ArrayList<String> checkRevers;
+            // Find unknown pairs
+            findUnknownPairs(unknown, table);
 
-        //init table
-        initTable(table);
+            // Process unknown pairs
+            processUnknownPairs(different, unknown);
+            markTable(different, table);
 
-        //state-finalState ---> different
+            resultState = resultState(table, unknown);
+            minimizationDFA(resultState);
+
+        } catch (IllegalStateException e) {
+            showError("DFA Validation Error", e.getMessage());
+        } catch (Exception e) {
+            showError("Unexpected Error", "An error occurred while processing DFA: " + e.getMessage());
+        }
+    }
+
+    private void validateDFA() throws IllegalStateException {
+        // Check for states existence
+        if (states == null || states.isEmpty()) {
+            throw new IllegalStateException("At least one state must exist");
+        }
+
+        // Check for symbols existence
+        if (symbols == null || symbols.isEmpty()) {
+            throw new IllegalStateException("At least one symbol must exist");
+        }
+
+        // Validate start state
+        if (startState == null || startState.isEmpty() || !states.contains(startState)) {
+            throw new IllegalStateException("Start state must be valid and exist in the states list");
+        }
+
+        // Validate final states
+        if (finalStates == null || finalStates.isEmpty()) {
+            throw new IllegalStateException("At least one final state must exist");
+        }
+        
+        for (String finalState : finalStates) {
+            if (!states.contains(finalState)) {
+                throw new IllegalStateException("Final state " + finalState + " does not exist in the states list");
+            }
+        }
+
+        // Validate transition table
+        validateTransitionTable();
+    }
+
+    private void validateTransitionTable() throws IllegalStateException {
+        if (graph == null) {
+            throw new IllegalStateException("Transition table cannot be null");
+        }
+
+        for (String state : states) {
+            if (!graph.containsKey(state)) {
+                throw new IllegalStateException("Transitions for state " + state + " are not defined");
+            }
+
+            HashMap<String, String> transitions = graph.get(state);
+            if (transitions == null) {
+                throw new IllegalStateException("Transitions for state " + state + " cannot be null");
+            }
+
+            for (String symbol : symbols) {
+                if (!transitions.containsKey(symbol)) {
+                    throw new IllegalStateException("Transition for symbol " + symbol + " in state " + state + " is not defined");
+                }
+                
+                String targetState = transitions.get(symbol);
+                if (!states.contains(targetState)) {
+                    throw new IllegalStateException("Target state " + targetState + " for transition from " + state + " with symbol " + symbol + " is not valid");
+                }
+            }
+        }
+    }
+
+    private void findInitialDistinctStates(ArrayList<ArrayList<String>> different) {
         int count = 0;
         for (String fState : finalStates) {
             for (String state : states) {
-                //check all state except final state
                 if (!finalStates.contains(state)) {
                     different.add(new ArrayList<>());
                     different.get(count).add(fState);
                     different.get(count).add(state);
                     count++;
-
                 }
             }
         }
-        //Marking in the table ---> X
-        markTable(different, table);
+    }
 
-
-        //Add Unknown pairs of state
-        count = 0;
+    private void findUnknownPairs(ArrayList<ArrayList<String>> unknown, String[][] table) {
+        int count = 0;
         for (int i = 0; i < states.size(); i++) {
             for (int j = 0; j < states.size(); j++) {
-
-                if (i > j) {
-                    if (!Objects.equals(table[i][j], "X")) {
-                        String state1 = table[i][i];
-                        String state2 = table[j][j];
-
-                        unknown.add(new ArrayList<>());
-                        unknown.get(count).add(state1);
-                        unknown.get(count).add(state2);
-
-                        count++;
-
-                    }
+                if (i > j && !Objects.equals(table[i][j], "X")) {
+                    String state1 = table[i][i];
+                    String state2 = table[j][j];
+                    unknown.add(new ArrayList<>());
+                    unknown.get(count).add(state1);
+                    unknown.get(count).add(state2);
+                    count++;
                 }
             }
         }
-        //check Unknown pair of state
+    }
+
+    private void processUnknownPairs(ArrayList<ArrayList<String>> different, ArrayList<ArrayList<String>> unknown) {
         boolean flag = true;
-        int size;
         while (flag) {
-            size = different.size();
+            int size = different.size();
             for (int i = 0; i < unknown.size(); i++) {
-                int k = 0;
-                for (String symbol : symbols) {
-                    check.clear();
-                    String state1 = this.graph.get(unknown.get(i).get(k)).get(symbol);
-                    check.add(state1);
-                    String state2 = this.graph.get(unknown.get(i).get(k + 1)).get(symbol);
-                    check.add(state2);
-
-                    checkRevers = revers(check);
-
-
-                    if (different.contains(check) || different.contains(checkRevers)) {
-                        different.add(unknown.get(i));
-                        unknown.remove(unknown.get(i));
-                        i--;
-                        if (i < 0) {
-                            i = 0;
-                        }
-
-                    }
+                if (checkPairForDifference(different, unknown.get(i))) {
+                    different.add(unknown.get(i));
+                    unknown.remove(i);
+                    i = Math.max(-1, i - 1);
                 }
             }
-            if (different.size() == size) {
-                flag = false;
+            flag = different.size() != size;
+        }
+    }
 
+    private boolean checkPairForDifference(ArrayList<ArrayList<String>> different, ArrayList<String> pair) {
+        ArrayList<String> check = new ArrayList<>();
+        for (String symbol : symbols) {
+            check.clear();
+            String state1 = graph.get(pair.get(0)).get(symbol);
+            String state2 = graph.get(pair.get(1)).get(symbol);
+            check.add(state1);
+            check.add(state2);
+            ArrayList<String> checkRevers = revers(check);
+            if (different.contains(check) || different.contains(checkRevers)) {
+                return true;
             }
         }
-        //Marking in the table ---> X
-        markTable(different, table);
-        resultState = resultState(table, unknown);
-        minimizationDFA(resultState);
+        return false;
+    }
 
-
+    private void showError(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     public void deleteState() {
@@ -309,7 +374,7 @@ public class MinimizationProcess {
             MinimizedDFAController controller = loader.getController();
             controller.setDFAData(start, finales, minimizedGraph);
 
-            mainScene = confirmBtn.getScene();
+            Scene mainScene = confirmBtn.getScene();
             controller.setMainScene(mainScene);
 
             Stage stage = (Stage) confirmBtn.getScene().getWindow();
